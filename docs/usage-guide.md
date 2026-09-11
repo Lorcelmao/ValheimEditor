@@ -148,6 +148,29 @@ Only delete the `lorce_skilltest*` files. Never delete `lorce.fch` or your backu
 **Note:** your save folder contains a `steam_autocloud.vdf`, so Steam may sync it. If Steam ever shows a
 cloud-conflict prompt about these characters, choose to keep the **local** files.
 
+## Edit inventory
+
+```powershell
+fch inv list Save\lorce.fch                                              # slot, name, stack, durability
+
+fch inv set Save\lorce.fch --slot 4,2 --stack 50                          --out Save\edited.fch
+fch inv set Save\lorce.fch --slot 0,0 --durability 80                     --out Save\edited.fch
+fch inv remove Save\lorce.fch --slot 2,3                                  --out Save\edited.fch
+fch inv add   Save\lorce.fch Coins --stack 500                            --out Save\edited.fch
+fch inv add   Save\lorce.fch Wood --stack 50 --slot 7,0 --crafted-by-me   --out Save\edited.fch
+```
+
+- **Slots** are `X,Y` (`fch inv list` shows them); the grid is 8 wide, height from the save (usually 4).
+- **`--stack`**: 1–65535. **`--durability`**: the same number shown by `fch info`/`fch inv list`, ≥ 0.
+- **`add`** needs the exact, case-sensitive prefab name (e.g. `Wood`, not `wood` or `Log`). Unknown names are
+  rejected, because the game silently deletes an item whose name it doesn't recognise. If you're sure a name
+  from a newer game update is real, add `--allow-unknown-item`. Without `--slot`, the first free slot is used.
+- **`--durability`** on `add` defaults to 100. The editor has no way to know a fresh item's real maximum
+  durability (that lives in the game's own data, not the save), so tools and weapons may need a different
+  value to look right in the durability bar.
+- **`--crafted-by-me`** stamps the item as made by this character, matching how self-crafted items already
+  look in the save.
+
 ## Troubleshooting
 
 | Message | Meaning / fix |

@@ -1,8 +1,9 @@
 """Edit subcommands (`skills`, `char`) for the `fch` command line.
 
-Every edit command shares one tail: validate the destination, build typed
-edits, run them through the verified pipeline, print the exact field changes,
-then write (unless --dry-run).
+Every edit command shares one tail (`run_edits`): validate the destination,
+build typed edits, run them through the verified pipeline, print the exact
+field changes, then write (unless --dry-run). `cli_inventory.py` reuses these
+same helpers for the `inv` subcommand.
 """
 import argparse
 import sys
@@ -43,7 +44,7 @@ def run_edits(args, edits) -> int:
     return EXIT_OK
 
 
-def _player_or_fail(args):
+def player_or_fail(args):
     save = load_file(args.file)
     if save.profile is None or save.profile.player is None:
         print("cannot read player data: " + "; ".join(save.reasons), file=sys.stderr)
@@ -51,8 +52,17 @@ def _player_or_fail(args):
     return save.profile, save.profile.player
 
 
+def add_write_options(p: argparse.ArgumentParser) -> None:
+    dest = p.add_mutually_exclusive_group(required=True)
+    dest.add_argument("--out", type=Path, metavar="FILE", help="write the edited save to FILE")
+    dest.add_argument("--in-place", action="store_true", help="overwrite the input (a backup is kept)")
+    dest.add_argument("--dry-run", action="store_true", help="show the changes without writing")
+    p.add_argument("--force", action="store_true",
+                   help="write even if Valheim appears to be running or --out already exists (a backup is kept)")
+
+
 def cmd_skills_list(args) -> int:
-    _, player = _player_or_fail(args)
+    _, player = player_or_fail(args)
     if player is None:
         return EXIT_FAIL
     print(f"{'skill':<16}{'level':>12}{'progress':>12}")
@@ -78,7 +88,7 @@ def cmd_skills_set(args) -> int:
 
 
 def cmd_char_show(args) -> int:
-    profile, p = _player_or_fail(args)
+    profile, p = player_or_fail(args)
     if p is None:
         return EXIT_FAIL
     power = GUARDIAN_POWERS.get(p.guardian_power, p.guardian_power) if p.guardian_power else "none"
@@ -111,17 +121,8 @@ def cmd_char_set(args) -> int:
     return run_edits(args, edits)
 
 
-def _add_write_options(p: argparse.ArgumentParser) -> None:
-    dest = p.add_mutually_exclusive_group(required=True)
-    dest.add_argument("--out", type=Path, metavar="FILE", help="write the edited save to FILE")
-    dest.add_argument("--in-place", action="store_true", help="overwrite the input (a backup is kept)")
-    dest.add_argument("--dry-run", action="store_true", help="show the changes without writing")
-    p.add_argument("--force", action="store_true",
-                   help="write even if Valheim appears to be running or --out already exists (a backup is kept)")
-
-
 def register(sub) -> None:
-    """Add the edit subcommands to the main parser's subparsers."""
+    """Add the `skills` and `char` subcommands to the main parser's subparsers."""
     skills = sub.add_parser("skills", help="list or set skill levels").add_subparsers(dest="action", required=True)
     p = skills.add_parser("list", help="show every skill the character has")
     p.add_argument("file", type=Path)
@@ -131,7 +132,7 @@ def register(sub) -> None:
     p.add_argument("file", type=Path)
     p.add_argument("assignments", nargs="+", metavar="SKILL=LEVEL")
     p.add_argument("--keep-progress", action="store_true", help="keep progress toward the next level")
-    _add_write_options(p)
+    add_write_options(p)
     p.set_defaults(func=cmd_skills_set)
 
     char = sub.add_parser("char", help="show or set name and appearance").add_subparsers(dest="action", required=True)
@@ -151,5 +152,5 @@ def register(sub) -> None:
     p.add_argument("--gp-cooldown", metavar="SECONDS", help="guardian power cooldown in seconds")
     p.add_argument("--allow-unknown-style", action="store_true",
                    help="accept beard/hair names not in the known list (newer game versions)")
-    _add_write_options(p)
+    add_write_options(p)
     p.set_defaults(func=cmd_char_set)

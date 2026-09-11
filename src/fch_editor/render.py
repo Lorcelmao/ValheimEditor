@@ -2,6 +2,7 @@
 import base64
 import hashlib
 import math
+import re
 from dataclasses import fields, is_dataclass
 from datetime import datetime, timezone
 
@@ -110,10 +111,14 @@ def info_text(save: LoadedSave, catalog: ItemCatalog) -> str:
     lines.append("Skills    : " + ", ".join(f"{skill_name(s.type)} {s.level:g}" for s in pd.skills))
     lines.append(f"Inventory : {len(pd.items)} items")
     for it in sorted(pd.items, key=lambda i: (i.y, i.x)):
-        extra = "".join([" [equipped]" if it.equipped else "", f" q{it.quality}" if it.quality != 1 else "",
-                         f" by {it.crafter_name}" if it.crafter_name else ""])
-        lines.append(f"  ({it.x},{it.y}) {catalog.label(it.prefab_hash):<24} x{it.stack:<4} dur {it.durability:g}{extra}")
+        lines.append("  " + item_line(it, catalog))
     return "\n".join(lines)
+
+
+def item_line(it, catalog: ItemCatalog) -> str:
+    extra = "".join([" [equipped]" if it.equipped else "", f" q{it.quality}" if it.quality != 1 else "",
+                     f" by {it.crafter_name}" if it.crafter_name else ""])
+    return f"({it.x},{it.y}) {catalog.label(it.prefab_hash):<24} x{it.stack:<4} dur {it.durability:g}{extra}"
 
 
 def _pt(v) -> str:
@@ -146,7 +151,34 @@ def _fmt(v) -> str:
     return repr(v)
 
 
+# A record's own fields, e.g. "player.items[(2,3)].stack" under "player.items[(2,3)]".
+# `diff()` sorts paths, so every field of one record is contiguous in the list.
+# Non-greedy: the record is the FIRST bracket group, even when a field further
+# along the same path has its own bracket (e.g. custom_data['key']).
+_RECORD = re.compile(r"^(.+?\[[^\[\]]*\])(\.|$)")
+
+
 def diff_text(changes: list[tuple[str, object, object]]) -> str:
     if not changes:
         return "no differences"
-    return "\n".join(f"{path}: {_fmt(old)} -> {_fmt(new)}" for path, old, new in changes)
+    lines, i, n = [], 0, len(changes)
+    while i < n:
+        path, old, new = changes[i]
+        m = _RECORD.match(path)
+        if m:
+            key, j = m.group(1), i
+            while j < n and (mm := _RECORD.match(changes[j][0])) and mm.group(1) == key:
+                j += 1
+            group = changes[i:j]
+            # Collapse only a whole record appearing or disappearing, not an edit to it.
+            if len(group) > 1 and all(g[1] is None for g in group):
+                lines.append(f"{key}: added")
+                i = j
+                continue
+            if len(group) > 1 and all(g[2] is None for g in group):
+                lines.append(f"{key}: removed")
+                i = j
+                continue
+        lines.append(f"{path}: {_fmt(old)} -> {_fmt(new)}")
+        i += 1
+    return "\n".join(lines)

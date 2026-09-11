@@ -116,6 +116,62 @@ def test_text_resembling_float_tokens_is_shown_as_text(sample_bytes, text):
     assert diff_text(diff(a, b)) == f"name: 'Lorce' -> {text!r}"
 
 
+def test_diff_text_collapses_whole_record_add_and_remove(sample_bytes):
+    import copy as _copy
+
+    from fch_editor import model
+    from fch_editor.render import diff_text
+    from fch_editor.stable_hash import stable_hash
+
+    a = load_bytes(sample_bytes).profile
+    b = _copy.deepcopy(a)
+    b.player.items.append(model.Item(10000, 7, 0, 0, model.HAS_PREFAB | model.PICKED_UP,
+                                     prefab_hash=stable_hash("Coins")))
+    text = diff_text(diff(a, b))
+    assert "player.items[(7,0)]: added" in text
+    assert "player.items[(7,0)].prefab_hash" not in text  # not spelled out per field
+
+    c = _copy.deepcopy(a)
+    c.player.items = [i for i in c.player.items if (i.x, i.y) != (0, 0)]
+    text = diff_text(diff(a, c))
+    assert "player.items[(0,0)]: removed" in text
+    assert "player.items[(0,0)].durability_x100" not in text
+
+
+def test_diff_text_collapses_records_with_a_nested_bracket_field(sample_bytes):
+    # custom_data['key'] has its own bracket; the record key must still be the item's,
+    # not a second, larger key ending at that inner bracket.
+    import copy as _copy
+
+    from fch_editor import model
+    from fch_editor.render import diff_text
+    from fch_editor.stable_hash import stable_hash
+
+    a = load_bytes(sample_bytes).profile
+    b = _copy.deepcopy(a)
+    b.player.items.append(model.Item(
+        10000, 7, 0, 0, model.HAS_PREFAB | model.HAS_CUSTOM_DATA | model.PICKED_UP,
+        prefab_hash=stable_hash("Coins"), custom_data=[("origin", "quest")],
+    ))
+    text = diff_text(diff(a, b))
+    lines = text.splitlines()
+    assert lines.count("player.items[(7,0)]: added") == 1
+    assert not any("custom_data" in line for line in lines)  # folded into the single "added" line
+
+
+def test_diff_text_does_not_collapse_a_partial_edit(sample_bytes):
+    import copy as _copy
+    from fch_editor.render import diff_text
+
+    a = load_bytes(sample_bytes).profile
+    b = _copy.deepcopy(a)
+    b.player.items[0].stack = 5
+    b.player.items[0].durability_x100 = 500
+    text = diff_text(diff(a, b))
+    assert "removed" not in text and "added" not in text
+    assert ".stack: " in text and ".durability_x100: " in text
+
+
 def test_f32_text_is_shortest_and_unambiguous():
     import struct
     from fch_editor.render import f32_text

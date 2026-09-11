@@ -11,7 +11,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import cli_edits
+from . import cli_edits, cli_inventory
 from .catalog.items import ItemCatalog
 from .cli_edits import EXIT_FAIL, EXIT_OK
 from .diffing import diff
@@ -78,6 +78,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("b", type=Path)
     p.set_defaults(func=cmd_diff)
     cli_edits.register(sub)
+    cli_inventory.register(sub)
     return ap
 
 
