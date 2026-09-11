@@ -1,0 +1,29 @@
+{
+  "game": {
+    "assembly_valheim_sha256": "a5130f5a957ab51cb6538f5412cbe57b43f927f4a679918bff199b5c905d01bc",
+    "size": 2566144
+  },
+  "methods": {
+    "PlayerProfile.cs::private bool SavePlayerToDisk()": "c7f38dcdd6e931f82ba3b12e8dceba0ca75590d3fdb47954a1b50bc884143698",
+    "PlayerProfile.cs::private bool LoadPlayerFromDisk()": "ded7a54eae04db9905bb73b65c175919b3c91a56571eb3f7593fa449d4b4b2e3",
+    "PlayerProfile.cs::private ZPackage LoadPlayerDataFromDisk()": "827897c2e4b6b96a028de3cbd1c2865510e5510565afb936169d91ab3f66d4f7",
+    "Player.cs::public void Save(ZPackage pkg)": "8c3e737cff9bf87e9d346b1ac73cd11f828358a48d22992223943baaa14929a9",
+    "Player.cs::public void Load(ZPackage pkg)": "eb590f5dc5d93c4dcae072eb8a7d0b6f5668563652336e3138bd2d1ef3b00515",
+    "Inventory.cs::public void Save(ZPackage pkg)": "e3297ea221f451936c3254bc27535bf2b202ab4711d3d085ffac043da29c7d65",
+    "Inventory.cs::public void Load(ZPackage pkg)": "1c9cad51a6b3829c39fe896dbe4704a20ac52ca8dd188f74d2ebc8b53164cffd",
+    "ItemDrop.cs::public void Save(ZPackage pkg)": "264b3ef7aa677c82ebbb0e73d16af81f6c1789a3cc8e9a09525dbf6ed523c6c1",
+    "ItemDrop.cs::public static int Load(ZPackage pkg, ItemData itemData, Version.Item itemVersion)": "391f87f3501a23192d69fbeaf2ac30e70756abf1fe5217b31133f6e1f0c61739",
+    "Skills.cs::public void Save(ZPackage pkg)": "1b2016e8c06fd6fbee92641f7fbcd2389e6a78c78d992107162397af80c2dced",
+    "Skills.cs::public void Load(ZPackage pkg)": "cf961021e073ee399938a628bf7ff33e3f68e7478babd2e9b21277e034044be2",
+    "Skills.cs::public enum SkillType": "8cebcadba395f89089c7fef675247b3d3c6e2894b9f3664ddc2d00840c70bd59",
+    "Minimap.cs::private byte[] GetMapData()": "0f8f7609c50667a609d9f849139d7d43636a697d66228ae9b87ae93bbd65606e",
+    "Minimap.cs::private void SetMapData(byte[] data)": "6b9475be9b74b669e88e405fdaba3c1ea19c32a4a904178144a92f79ccca7cf7",
+    "BuildUi.cs::public byte[] SaveToBinary()": "0a60a16242bf5365ad36fdf3376c3f036100f4a556c5ea66d803152cf50d3f39",
+    "ZPackage.cs::public void WriteNumItems(int numItems)": "65e3795866b269af79eac8d0e3562fe8c9375cdbb83405e9d20aea637a65f324",
+    "ZPackage.cs::public void Write(string data)": "e0ef5959cb864e490df07d979f4b2df2a23ff30fe0639a57752fa3d9f960af0e",
+    "StringExtensionMethods.cs::public static int GetStableHashCode(this string str)": "5f6cb1f8c2996565b32a8137c32afb17d49d639b49a949d390d8ddd97b6ad5ea",
+    "PlayerStatType.cs::public enum PlayerStatType": "b0dd068fe345747b4c70baacd9e5eba42609a2125725b9fe340f20bfbc42d7c1",
+    "DifficultyRequirement.cs::public enum DifficultyRequirement": "d6777f6627f43e1c537e1fecfb98e7316dcc6bba0fbad8c6fa3a47e942115258",
+    "Version.cs::public abstract class Version": "4d35cac252161bacbc5f12342f9524659cdbf68793e17c25411f91bd0eca4ec4"
+  }
+}
