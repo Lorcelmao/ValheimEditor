@@ -44,3 +44,7 @@ class ItemCatalog:
 
     def label(self, prefab_hash: int) -> str:
         return self.name(prefab_hash) or f"#{hash_hex(prefab_hash)}"
+
+    def names(self) -> list[str]:
+        """Every known prefab name, sorted (for pickers/autocomplete)."""
+        return sorted(self._by_hash.values())

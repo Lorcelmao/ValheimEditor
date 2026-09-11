@@ -57,6 +57,12 @@ def cmd_diff(args) -> int:
     return EXIT_OK if not changes else EXIT_FAIL
 
 
+def cmd_gui(args) -> int:
+    from .gui.app import main as gui_main  # deferred: tkinter only needed for this command
+    gui_main(args.file)
+    return EXIT_OK
+
+
 def build_parser() -> argparse.ArgumentParser:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--items", action="append", type=Path, metavar="FILE",
@@ -79,6 +85,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_diff)
     cli_edits.register(sub)
     cli_inventory.register(sub)
+    p = sub.add_parser("gui", help="open the graphical editor")
+    p.add_argument("file", type=Path, nargs="?", help="save to open immediately")
+    p.set_defaults(func=cmd_gui)
     return ap
 
 

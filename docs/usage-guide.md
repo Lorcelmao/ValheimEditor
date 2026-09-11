@@ -171,6 +171,38 @@ fch inv add   Save\lorce.fch Wood --stack 50 --slot 7,0 --crafted-by-me   --out 
 - **`--crafted-by-me`** stamps the item as made by this character, matching how self-crafted items already
   look in the save.
 
+## Graphical editor
+
+For clicking instead of typing commands:
+
+```powershell
+fch gui                          # opens empty; use File > Open
+fch gui Save\lorce.fch           # opens straight into a save
+```
+
+Or, once built (see below), just double-click **`dist\fch-editor.exe`** — no Python needed.
+
+- **Tabs:** Overview (read-only summary), Skills, Character, Inventory. Each edit form has its own
+  **Apply**/**Add**/**Remove** button; nothing is written to disk until you use **File > Save** or **Save As**.
+- **File > Save** overwrites the open file (a timestamped backup is kept next to it, same as `--in-place`).
+  **File > Save As…** writes a new file and leaves the original untouched, same as `--out`.
+- Before writing, a dialog lists every field that will change — cancel there and nothing is written.
+- A read-only save (see Troubleshooting) opens for viewing with editing disabled and the reason shown in the
+  status bar.
+- **File > Discard Pending Changes** drops everything you've entered without writing, in case you want to
+  start over.
+
+### Building the standalone .exe
+
+```powershell
+.venv\Scripts\python.exe -m pip install pyinstaller   # build tool only, not a runtime dependency
+.\tools\build_gui.ps1
+```
+
+Produces `dist\fch-editor.exe` (~11 MB), which runs on a machine with no Python installed. Windows SmartScreen
+or antivirus may flag a fresh, unsigned PyInstaller build the first time — this is a known PyInstaller quirk,
+not a sign of anything in the exe itself; running from source (`fch gui`) is always an alternative.
+
 ## Troubleshooting
 
 | Message | Meaning / fix |

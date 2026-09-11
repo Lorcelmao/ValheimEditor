@@ -11,6 +11,9 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+# Build-time only: packages the GUI into a standalone .exe (tools/build_gui.ps1).
+# The app itself has no runtime dependencies.
+gui-build = ["pyinstaller>=6"]
 
 [project.scripts]
 fch = "fch_editor.cli:main"
