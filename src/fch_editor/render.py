@@ -8,10 +8,11 @@ from datetime import datetime, timezone
 from .catalog.enums import scope_name, skill_name, stat_name
 from .catalog.items import ItemCatalog
 from .codec.map_blob import decode_map
+from .diffing import F32Bits
+from .reader import F32, RawF32
 from .errors import FchError
 from .load import LoadedSave
 from .model import MapData
-from .reader import RawF32
 
 
 def map_summary(raw: bytes | None) -> dict | None:
@@ -119,8 +120,33 @@ def _pt(v) -> str:
     return "(" + ", ".join(f"{c:.1f}" for c in v) + ")"
 
 
+def f32_text(v: float) -> str:
+    """Shortest decimal that reads back as the same 32-bit float.
+
+    0.800000011920929 prints as 0.8, yet two f32 values that differ only in the
+    last bit still print differently (f32 needs up to 9 significant digits).
+    """
+    if not math.isfinite(v):
+        return repr(v)
+    bits = F32.pack(v)
+    for digits in range(1, 10):
+        text = f"{v:.{digits}g}"
+        if F32.pack(float(text)) == bits:
+            return repr(float(text))
+    return repr(v)
+
+
+def _fmt(v) -> str:
+    if isinstance(v, F32Bits):
+        return repr(v) if math.isnan(v.value) else f32_text(v.value)
+    if isinstance(v, float):
+        return f32_text(v)
+    if isinstance(v, tuple):
+        return "(" + ", ".join(_fmt(x) for x in v) + ")"
+    return repr(v)
+
+
 def diff_text(changes: list[tuple[str, object, object]]) -> str:
-    # diffing.F32Bits reprs as a plain number, so every value can use repr().
     if not changes:
         return "no differences"
-    return "\n".join(f"{path}: {old!r} -> {new!r}" for path, old, new in changes)
+    return "\n".join(f"{path}: {_fmt(old)} -> {_fmt(new)}" for path, old, new in changes)

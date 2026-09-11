@@ -5,13 +5,12 @@ progression and gameplay effect at 100. So any finite level >= 0 that fits a
 32-bit float is accepted. Setting a skill the character never used adds it;
 the game loads any defined SkillType.
 """
-import math
 from dataclasses import dataclass
 
 from ..catalog.enums import SKILL_IDS, SKILL_NAMES
 from ..errors import EditError
 from ..model import Profile, Skill
-from ..reader import F32
+from .values import parse_number, stored_f32
 
 ALL = "all"
 
@@ -27,21 +26,7 @@ def parse_skill(name: str) -> int | str:
 
 
 def parse_level(text: str) -> float:
-    try:
-        return float(text)
-    except ValueError:
-        raise EditError(f"skill level must be a number, got {text!r}") from None
-
-
-def _stored_level(level: float) -> float:
-    """Validate a level and return it exactly as the file will store it (f32)."""
-    if not isinstance(level, (int, float)) or not math.isfinite(level) or level < 0:
-        raise EditError(f"skill level must be a finite number >= 0, got {level!r}")
-    try:
-        stored = F32.unpack(F32.pack(level))[0]
-    except OverflowError:
-        raise EditError(f"skill level {level:g} is too large to store") from None
-    return stored + 0.0  # -0.0 and underflow to zero become plain 0.0
+    return parse_number(text, "skill level")
 
 
 @dataclass
@@ -60,7 +45,7 @@ class SetSkillLevel:
     def __post_init__(self):
         if self.skill != ALL and self.skill not in SKILL_NAMES:
             raise EditError(f"unknown skill type {self.skill!r}")
-        self.level = _stored_level(self.level)
+        self.level = stored_f32(self.level, "skill level")
 
     def apply(self, profile: Profile) -> list[str]:
         if profile.player is None:

@@ -11,16 +11,13 @@ import json
 import sys
 from pathlib import Path
 
-from .catalog.enums import skill_name
+from . import cli_edits
 from .catalog.items import ItemCatalog
+from .cli_edits import EXIT_FAIL, EXIT_OK
 from .diffing import diff
-from .edits.pipeline import apply_edits, check_destination, write_result
-from .edits.skills import ALL, SetSkillLevel, parse_level, parse_skill
-from .errors import EditError, FchError
+from .errors import FchError
 from .load import load_file
 from .render import diff_text, info_text, to_json
-
-EXIT_OK, EXIT_FAIL = 0, 1
 
 
 def _catalog(args) -> ItemCatalog:
@@ -60,63 +57,6 @@ def cmd_diff(args) -> int:
     return EXIT_OK if not changes else EXIT_FAIL
 
 
-def cmd_skills_list(args) -> int:
-    save = load_file(args.file)
-    if save.profile is None or save.profile.player is None:
-        print("cannot read skills: " + "; ".join(save.reasons), file=sys.stderr)
-        return EXIT_FAIL
-    print(f"{'skill':<16}{'level':>12}{'progress':>12}")
-    for s in sorted(save.profile.player.skills, key=lambda s: skill_name(s.type)):
-        print(f"{skill_name(s.type):<16}{s.level:>12g}{s.accumulator:>12g}")
-    return EXIT_OK
-
-
-def cmd_skills_set(args) -> int:
-    edits, seen = [], set()
-    for assignment in args.assignments:
-        name, sep, level = assignment.partition("=")
-        if not sep:
-            raise EditError(f"expected SKILL=LEVEL, got {assignment!r}")
-        skill = parse_skill(name)
-        if skill in seen:
-            raise EditError(f"{name.strip()} is given more than once")
-        seen.add(skill)
-        edits.append(SetSkillLevel(skill, parse_level(level), args.keep_progress))
-    if ALL in seen and len(seen) > 1:
-        raise EditError("'all' cannot be combined with individual skills")
-    return _run_edits(args, edits)
-
-
-def _run_edits(args, edits) -> int:
-    """Shared tail of every edit command: plan, show the diff, then write."""
-    if not args.dry_run:
-        check_destination(args.file, args.out, args.in_place, args.force)
-    save = load_file(args.file)
-    for w in save.warnings:
-        print(f"warning: {w}", file=sys.stderr)
-    result = apply_edits(save, edits)
-    if not result.changes:
-        print("nothing to change: the save already has these values")
-        return EXIT_OK
-    print(diff_text(result.changes))
-    if args.dry_run:
-        print("dry run: nothing written")
-        return EXIT_OK
-    backup = write_result(result, args.file, args.out, args.in_place, args.force)
-    target = args.file if args.in_place else args.out
-    print(f"wrote {target}" + (f" (previous version backed up to {backup})" if backup else ""))
-    return EXIT_OK
-
-
-def _add_write_options(p: argparse.ArgumentParser) -> None:
-    dest = p.add_mutually_exclusive_group(required=True)
-    dest.add_argument("--out", type=Path, metavar="FILE", help="write the edited save to FILE")
-    dest.add_argument("--in-place", action="store_true", help="overwrite the input (a backup is kept)")
-    dest.add_argument("--dry-run", action="store_true", help="show the changes without writing")
-    p.add_argument("--force", action="store_true",
-                   help="write even if Valheim appears to be running or --out already exists (a backup is kept)")
-
-
 def build_parser() -> argparse.ArgumentParser:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--items", action="append", type=Path, metavar="FILE",
@@ -137,18 +77,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("a", type=Path)
     p.add_argument("b", type=Path)
     p.set_defaults(func=cmd_diff)
-
-    skills = sub.add_parser("skills", help="list or set skill levels").add_subparsers(dest="action", required=True)
-    p = skills.add_parser("list", help="show every skill the character has")
-    p.add_argument("file", type=Path)
-    p.set_defaults(func=cmd_skills_list)
-    p = skills.add_parser("set", help="set skill levels, e.g. Run=50 WoodCutting=25 or all=100 "
-                                      "(any level >= 0; values above 100 are kept as-is)")
-    p.add_argument("file", type=Path)
-    p.add_argument("assignments", nargs="+", metavar="SKILL=LEVEL")
-    p.add_argument("--keep-progress", action="store_true", help="keep progress toward the next level")
-    _add_write_options(p)
-    p.set_defaults(func=cmd_skills_set)
+    cli_edits.register(sub)
     return ap
 
 

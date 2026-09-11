@@ -116,6 +116,18 @@ def test_text_resembling_float_tokens_is_shown_as_text(sample_bytes, text):
     assert diff_text(diff(a, b)) == f"name: 'Lorce' -> {text!r}"
 
 
+def test_f32_text_is_shortest_and_unambiguous():
+    import struct
+    from fch_editor.render import f32_text
+    assert f32_text(0.800000011920929) == "0.8" and f32_text(50.0) == "50.0"
+    assert f32_text(12345678.0) == "12345678.0"  # no exponent/rounding for large integers
+    a = struct.unpack("<f", bytes.fromhex("5a9b473d"))[0]  # 0.04881338...
+    b = struct.unpack("<f", bytes.fromhex("5b9b473d"))[0]  # next f32 up
+    assert f32_text(a) != f32_text(b)
+    for v in (a, b):
+        assert struct.pack("<f", float(f32_text(v))) == struct.pack("<f", v)
+
+
 def test_every_model_field_appears_in_flatten(sample_bytes):
     from dataclasses import fields
     p = load_bytes(sample_bytes).profile

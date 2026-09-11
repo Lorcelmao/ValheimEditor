@@ -1,0 +1,162 @@
+# fch editor: usage and in-game test guide
+
+Commands run from the project folder in **PowerShell** (or cmd):
+
+```powershell
+cd D:\ValheimEditor
+```
+
+Every command below starts with `.venv\Scripts\python.exe -m fch_editor.cli`. To shorten it in a PowerShell
+session, define a helper once:
+
+```powershell
+function fch { & D:\ValheimEditor\.venv\Scripts\python.exe -m fch_editor.cli @args }
+```
+
+The examples use `fch` from here on. The full form works everywhere.
+
+## Golden rules
+
+1. **Close Valheim before editing.** The game rewrites your save when it exits and would overwrite your edit.
+   The editor refuses to write while `valheim.exe` is running.
+2. **Edit copies, not your only save.** Use `--out` to write a new file. `--in-place` also keeps a
+   timestamped backup (`<name>.fch.bak-YYYYMMDD-HHMMSS`).
+3. Your saves live in:
+   `%USERPROFILE%\AppData\LocalLow\IronGate\Valheim\characters_local`
+
+## Inspect a save (read-only; these never change anything)
+
+```powershell
+fch info   Save\lorce.fch                      # character, worlds, vitals, skills, inventory
+fch verify Save\lorce.fch                      # "OK: safe to edit" or why it is read-only
+fch skills list Save\lorce.fch                 # every skill with level and progress
+fch dump   Save\lorce.fch --section skills     # JSON (sections: stats, worlds, player, inventory, skills)
+fch diff   Save\a.fch Save\b.fch               # field-by-field differences between two saves
+```
+
+`verify` exits with code 1 when a save cannot be edited safely. The usual cause is a save from an older game
+version: the January 2025 `.fch.old` and backup files in your folder use an older format, so they open
+read-only.
+
+## Edit skills
+
+```powershell
+# preview only, nothing written
+fch skills set Save\lorce.fch Run=50 WoodCutting=25 --dry-run
+
+# write the result to a new file (the original is untouched)
+fch skills set Save\lorce.fch Run=50 WoodCutting=25 --out Save\lorce_edited.fch
+
+# every skill at once
+fch skills set Save\lorce.fch all=100 --out Save\lorce_all100.fch
+
+# overwrite the file itself (a backup is made next to it)
+fch skills set Save\lorce.fch Run=50 --in-place
+```
+
+- **Skill names** (case-insensitive): Swords, Knives, Clubs, Polearms, Spears, Blocking, Axes, Bows,
+  ElementalMagic, BloodMagic, Unarmed, Pickaxes, WoodCutting, Crossbows, Jump, Sneak, Run, Swim, Fishing,
+  Cooking, Farming, Crafting, Dodge, Ride, or `all`.
+- **Level:** any number ≥ 0. There is no upper limit. The game shows levels above 100, but progress and
+  gameplay effect stop at 100.
+- **Progress:** progress toward the next level resets to 0. Add `--keep-progress` to keep it.
+- **Unused skills:** a skill the character has never used is added.
+- **Existing `--out` file:** writing onto an existing file needs `--force`, and a backup is kept.
+
+## Edit name and appearance
+
+```powershell
+fch char show Save\lorce.fch
+
+fch char set Save\lorce.fch --name LorceTest --hair Hair5 --guardian-power Eikthyr --out Save\lorcetest.fch
+fch char set Save\lorce.fch --skin 0.9,0.7,0.6 --hair-color 0.1,0.05,0.03 --model 1 --dry-run
+```
+
+| Option | Values |
+|--------|--------|
+| `--name` | 3–64 characters. Only the name shown in game changes, not the file name, so choose the file name with `--out` |
+| `--beard` / `--hair` | Style names such as `BeardNone`, `Beard5`, `HairNone`, `Hair24` (case-insensitive). Add `--allow-unknown-style` for styles from newer game versions |
+| `--skin` / `--hair-color` | `R,G,B` numbers ≥ 0; your current values are shown by `char show` |
+| `--model` | `0` or `1` (body type) |
+| `--guardian-power` | `Eikthyr`, `TheElder`, `Bonemass`, `Moder`, `Yagluth`, `Queen`, `Fader` (Ashlands), `DeepNorth`, or `none` |
+| `--gp-cooldown` | Seconds until the power can be used again (`0` = ready) |
+
+Health and stamina are not editable: the game recalculates them when the character loads.
+
+An edited copy keeps the original character's player ID. Playing both the original and the copy in the same
+world can make the game treat them as one player (e.g. for ownership of beds and wards). Use a throwaway
+world for tests, or keep only one of the two in your saves folder.
+
+Before writing, the editor prints exactly which fields change. It refuses to write if anything outside the
+requested fields would change, or if the new file doesn't read back exactly as intended.
+
+## In-game load test (skills)
+
+A ready-made test copy exists: `Save\lorce_skilltest.fch`. It has Run 50, WoodCutting 25, and Swim 10 (newly
+added); everything else is identical to your character. To make it again:
+
+```powershell
+fch skills set Save\lorce.fch Run=50 WoodCutting=25 Swim=10 --out Save\lorce_skilltest.fch --force
+```
+
+### Steps
+
+1. **Close Valheim.**
+2. **Put the test copy next to your real character:**
+   ```powershell
+   $saves = "$env:USERPROFILE\AppData\LocalLow\IronGate\Valheim\characters_local"
+   Copy-Item Save\lorce_skilltest.fch "$saves\lorce_skilltest.fch"
+   ```
+   It shows up as a **second character named "Lorce"**. Your real `lorce.fch` is not touched. Renaming
+   characters comes in a later phase.
+3. **Start Valheim** and pick the test character. You can tell the two apart by their skills: the test copy
+   has Run 50.
+4. **Check the Skills panel** (inventory → Skills tab):
+   - Run **50**, Woodcutting **25**, Swim **10**
+   - Everything else as before (e.g. Crafting 1000, Sneak 700)
+5. **Enter a world.** A throwaway world is best, because the copy shares your character's player ID. Walk
+   around for a minute, then **Menu → Logout** or **Save & Quit** so the game saves the character.
+6. **Close Valheim** and bring the re-saved file back:
+   ```powershell
+   Copy-Item "$saves\lorce_skilltest.fch" Save\lorce_skilltest_resaved.fch
+   fch verify Save\lorce_skilltest_resaved.fch
+   fch diff   Save\lorce_skilltest.fch Save\lorce_skilltest_resaved.fch
+   ```
+
+### What a pass looks like
+
+- `verify` prints **`OK: safe to edit`**: the game wrote a file the editor still reads perfectly.
+- `diff` shows only what playing changed: logout position, play-time stats, maybe Run or Jump
+  rising a little if you used them. Run should still be about 50, WoodCutting 25, and Swim about 10.
+- The Skills panel in step 4 matched.
+
+### What to send back
+
+- The output of the two commands in step 6.
+- What the Skills panel showed in step 4 (a screenshot is fine).
+- Anything odd: the character failing to load, wrong values, items missing.
+
+### Clean up afterwards
+
+```powershell
+Remove-Item "$saves\lorce_skilltest.fch"
+Remove-Item "$saves\lorce_skilltest.fch.old" -ErrorAction SilentlyContinue   # the game may create this
+```
+
+Only delete the `lorce_skilltest*` files. Never delete `lorce.fch` or your backups.
+
+**Note:** your save folder contains a `steam_autocloud.vdf`, so Steam may sync it. If Steam ever shows a
+cloud-conflict prompt about these characters, choose to keep the **local** files.
+
+## Troubleshooting
+
+| Message | Meaning / fix |
+|---------|---------------|
+| `Valheim is running ... close it first` | Quit the game fully, then retry (`--force` skips the check; not recommended) |
+| `... already exists; pass --force` | `--out` points at an existing file; choose a new name or add `--force` (backup kept) |
+| `FAIL: save is read-only for this editor` | Older or unknown save format; the reason is printed above it |
+| `... changed since it was read` | The file was saved by something else mid-edit; just run the command again |
+| `unknown skill 'X'` | Typo in the skill name; the valid names are listed in the message |
+
+**Restoring:** every `--in-place` edit leaves `<name>.fch.bak-<date>-<time>` next to the file. To restore,
+close Valheim and copy the backup back over `<name>.fch`.
