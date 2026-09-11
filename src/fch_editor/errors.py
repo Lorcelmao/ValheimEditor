@@ -30,3 +30,7 @@ class UnsupportedVersion(FchError):
 
 class UnsafeWrite(FchError):
     """A write was refused because it could damage the save."""
+
+
+class EditError(FchError):
+    """An edit request is invalid (unknown name, out-of-range value, ...)."""

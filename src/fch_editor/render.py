@@ -120,6 +120,7 @@ def _pt(v) -> str:
 
 
 def diff_text(changes: list[tuple[str, object, object]]) -> str:
+    # diffing.F32Bits reprs as a plain number, so every value can use repr().
     if not changes:
         return "no differences"
     return "\n".join(f"{path}: {old!r} -> {new!r}" for path, old, new in changes)

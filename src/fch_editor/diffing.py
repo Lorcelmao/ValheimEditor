@@ -9,7 +9,7 @@ written. Opaque blobs are represented by length + SHA-256 prefix.
 import hashlib
 import math
 import struct
-from dataclasses import fields, is_dataclass
+from dataclasses import dataclass, fields, is_dataclass
 
 from .catalog.enums import scope_name, skill_name, stat_name
 from .model import Profile
@@ -20,16 +20,34 @@ from .reader import F32, RawF32
 _SPECIAL = {"stat_blocks", "worlds", "player", "player_raw", "player_error"}
 
 
+@dataclass(frozen=True)
+class F32Bits:
+    """A float compared by its stored bit pattern. Used for zeros (keeps -0.0
+    distinct) and NaN (NaN never equals itself). A distinct type, so text that
+    merely looks like one can never be mistaken for a float."""
+
+    hex: str
+
+    @property
+    def value(self) -> float:
+        return F32.unpack(bytes.fromhex(self.hex))[0]
+
+    def __repr__(self) -> str:
+        v = self.value
+        return f"NaN({self.hex})" if math.isnan(v) else repr(v)
+
+
 def _float(v: float):
     if isinstance(v, RawF32):
-        return f"f32<{v.raw.hex()}>"
+        return F32Bits(v.raw.hex())
     try:
         bits = F32.pack(v)
     except (OverflowError, struct.error):
         return f"f32-out-of-range<{v!r}>"
-    if v == 0.0 or math.isnan(v):
-        return f"f32<{bits.hex()}>"  # keeps -0.0 distinct, and NaN equal to itself
-    return F32.unpack(bits)[0]  # value as stored, so 0.1 matches its re-read 0.10000000149
+    stored = F32.unpack(bits)[0]  # the value as written, so 0.1 matches its re-read 0.10000000149
+    if stored == 0.0 or math.isnan(stored):
+        return F32Bits(bits.hex())
+    return stored
 
 
 def _scalar(v):

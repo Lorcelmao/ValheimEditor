@@ -1,5 +1,7 @@
 import copy
 
+import pytest
+
 from fch_editor import model
 from fch_editor.catalog.enums import STAT_NAMES, skill_name
 from fch_editor.catalog.items import ItemCatalog, hash_hex
@@ -103,6 +105,15 @@ def test_string_lists_keyed_by_value(sample_bytes):
     b.player.known_recipes.insert(0, "$item_new_recipe")
     assert [p for p, _, _ in diff(a, b)] == [
         "player.known_recipes.count", "player.known_recipes['$item_new_recipe']"]
+
+
+@pytest.mark.parametrize("text", ["f32<zzzzzzzz>", "f32<0000803f>"])
+def test_text_resembling_float_tokens_is_shown_as_text(sample_bytes, text):
+    from fch_editor.render import diff_text
+    a = load_bytes(sample_bytes).profile
+    b = copy.deepcopy(a)
+    b.name = text
+    assert diff_text(diff(a, b)) == f"name: 'Lorce' -> {text!r}"
 
 
 def test_every_model_field_appears_in_flatten(sample_bytes):
