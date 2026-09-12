@@ -206,10 +206,18 @@ function el(tag, opts = {}, children = []) {
   return node;
 }
 
-function table(headers, rows) {
+// `numericCols` (0-based column indices) must right-align a header exactly
+// when its own column's body cells are right-aligned (the caller applies
+// "num" to those <td>s itself -- see renderSkills/renderInventory). Without
+// this, a header stayed left-aligned by default while its numbers sat
+// right-aligned in the same, often much wider, auto-sized column: visually
+// the two land far apart even though they're the same logical column,
+// exactly the "columns don't align" bug a real screenshot caught.
+function table(headers, rows, numericCols = []) {
   const wrapper = el("div", { class: "table-wrapper" });
   const t = el("table");
-  const thead = el("tr", {}, headers.map((h) => el("th", { text: h })));
+  const thead = el("tr", {}, headers.map((h, i) =>
+    el("th", { class: numericCols.includes(i) ? "num" : "", text: h })));
   t.appendChild(el("thead", {}, [thead]));
   const tbody = el("tbody", {}, rows.map((r) => el("tr", {}, r)));
   t.appendChild(tbody);
@@ -225,6 +233,131 @@ function selectFromList(options, current, disabled) {
     select.appendChild(optionEl);
   }
   return select;
+}
+
+// Wraps a <input type="number"> with a small themed up/down spinner,
+// replacing the browser's native one (hidden via the input[type="number"]
+// rules in style.css -- those alone just removed it; this adds a themed
+// replacement). Clicking a button adjusts .value using the input's own
+// min/max/step, then dispatches a real "change" event so every existing
+// commit handler (the submitEdit(...) wiring already on the input) fires
+// exactly as if the user had typed and blurred -- no second code path to
+// keep in sync with the first.
+function numberField(input) {
+  const step = () => parseFloat(input.step) || 1; // "any"/unset -> NaN -> nudge by 1
+  const bump = (delta) => {
+    if (input.disabled) return;
+    const current = parseFloat(input.value);
+    let next = (Number.isFinite(current) ? current : 0) + delta;
+    if (input.min !== "" && next < parseFloat(input.min)) next = parseFloat(input.min);
+    if (input.max !== "" && next > parseFloat(input.max)) next = parseFloat(input.max);
+    input.value = next;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  // Excluded from tab order (tabindex -1): a type="number" input already
+  // steps via the Up/Down arrow keys with no visible spinner needed, so a
+  // keyboard user loses nothing -- these buttons are a mouse/touch
+  // convenience, and giving them their own tab stops would just add a
+  // redundant detour through the same functionality.
+  const upBtn = el("button", { type: "button", class: "spin-btn spin-up", "aria-label": "Increase", tabindex: "-1", disabled: input.disabled });
+  const downBtn = el("button", { type: "button", class: "spin-btn spin-down", "aria-label": "Decrease", tabindex: "-1", disabled: input.disabled });
+  upBtn.addEventListener("click", () => bump(step()));
+  downBtn.addEventListener("click", () => bump(-step()));
+  return el("span", { class: "number-field" }, [input, el("span", { class: "spin-buttons" }, [upBtn, downBtn])]);
+}
+
+let comboBoxIdCounter = 0;
+
+// A themed replacement for <input list="..."> + <datalist>: the native
+// popup is rendered by the browser's own UI layer and ignores page styles
+// entirely in every major browser, so no CSS fix can make it match a dark
+// theme -- this is the only way to fix that (see the design discussion this
+// was built from). Implements the ARIA combobox pattern (role="combobox" on
+// the input, role="listbox"/"option" on the popup, aria-expanded/
+// aria-activedescendant kept in sync) so it is at least as accessible as
+// what it replaces, not just visually similar. Filters `options` by
+// substring, case-insensitive, capped at 50 shown matches (the dataset
+// itself, ~590 catalog entries, needs no virtualization -- filtering to a
+// short list on every keystroke is cheap).
+function comboBox(options, placeholder, disabled) {
+  const wrapper = el("span", { class: "combobox" });
+  const listId = `combobox-list-${comboBoxIdCounter++}`;
+  const input = el("input", {
+    type: "text", class: "combobox-input", role: "combobox", placeholder,
+    "aria-expanded": "false", "aria-autocomplete": "list", "aria-controls": listId,
+    autocomplete: "off", disabled,
+  });
+  const listbox = el("ul", { class: "combobox-list", role: "listbox", id: listId, hidden: true });
+  wrapper.appendChild(input);
+  wrapper.appendChild(listbox);
+  wrapper.input = input; // the caller reads/writes .value and .disabled directly, same as any other field
+
+  let matches = [];
+  let activeIndex = -1;
+
+  function renderMatches() {
+    const q = input.value.trim().toLowerCase();
+    matches = q ? options.filter((o) => o.toLowerCase().includes(q)).slice(0, 50) : [];
+    activeIndex = -1;
+    listbox.innerHTML = "";
+    for (const [i, name] of matches.entries()) {
+      listbox.appendChild(el("li", { id: `${listId}-opt-${i}`, role: "option", text: name }));
+    }
+    const open = matches.length > 0;
+    listbox.hidden = !open;
+    input.setAttribute("aria-expanded", String(open));
+    input.removeAttribute("aria-activedescendant");
+  }
+
+  function setActive(i) {
+    const items = listbox.children;
+    if (items[activeIndex]) items[activeIndex].classList.remove("active");
+    activeIndex = i;
+    if (items[activeIndex]) {
+      items[activeIndex].classList.add("active");
+      items[activeIndex].scrollIntoView({ block: "nearest" });
+      input.setAttribute("aria-activedescendant", items[activeIndex].id);
+    } else {
+      input.removeAttribute("aria-activedescendant");
+    }
+  }
+
+  function choose(i) {
+    if (i < 0 || i >= matches.length) return;
+    input.value = matches[i];
+    close();
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function close() {
+    listbox.hidden = true;
+    input.setAttribute("aria-expanded", "false");
+    input.removeAttribute("aria-activedescendant");
+    activeIndex = -1;
+  }
+
+  input.addEventListener("input", renderMatches);
+  input.addEventListener("keydown", (e) => {
+    if (listbox.hidden) {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") renderMatches();
+      return;
+    }
+    if (e.key === "ArrowDown") { e.preventDefault(); setActive(Math.min(activeIndex + 1, matches.length - 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActive(Math.max(activeIndex - 1, 0)); }
+    else if (e.key === "Enter") { if (activeIndex >= 0) { e.preventDefault(); choose(activeIndex); } }
+    else if (e.key === "Escape") { close(); }
+  });
+  // mousedown, not click: it fires before the input's blur, so the option
+  // is still in the DOM (and considered "the thing being interacted with")
+  // when chosen by pointer -- a click handler here would lose the race to
+  // the blur handler below, which closes the list first.
+  listbox.addEventListener("mousedown", (e) => {
+    const li = e.target.closest("li");
+    if (li) choose(Array.prototype.indexOf.call(listbox.children, li));
+  });
+  input.addEventListener("blur", () => setTimeout(close, 0));
+
+  return wrapper;
 }
 
 // --- editing: the one path every form control commits an edit through ----
@@ -282,12 +415,12 @@ function renderSkills(profile, writable) {
     });
     return [
       el("td", { text: s.name }),
-      el("td", { class: "mono num" }, [levelInput]),
+      el("td", { class: "mono num" }, [numberField(levelInput)]),
       el("td", { class: "mono num", text: f32Text(s.accumulator) }),
       el("td", {}, [keepCheckbox]),
     ];
   });
-  panel.appendChild(table(["Skill", "Level", "Progress", "Keep progress"], rows));
+  panel.appendChild(table(["Skill", "Level", "Progress", "Keep progress"], rows, [1, 2]));
 
   const allLevel = el("input", { type: "number", step: "any", min: "0", value: "0", class: "mono", disabled: !writable });
   const allKeep = el("input", { type: "checkbox", disabled: !writable });
@@ -298,7 +431,7 @@ function renderSkills(profile, writable) {
     submitEdit({ kind: "skill", skill: "all", level, keep_progress: allKeep.checked });
   });
   panel.appendChild(el("div", { class: "set-all-row" }, [
-    el("label", { text: "Set every skill to " }, [allLevel]),
+    el("label", { text: "Set every skill to " }, [numberField(allLevel)]),
     el("label", {}, [allKeep, el("span", { text: " keep progress" })]),
     allBtn,
   ]));
@@ -379,7 +512,7 @@ function renderCharacter(profile, writable) {
   const rows = [
     ["Name", nameInput], ["Beard", beardSelect], ["Hair", hairSelect],
     ["Skin color", skinColor], ["Hair color", hairColor], ["Model", modelWrap],
-    ["Guardian power", gpSelect], ["Guardian power cooldown (s)", cooldownInput],
+    ["Guardian power", gpSelect], ["Guardian power cooldown (s)", numberField(cooldownInput)],
   ];
   panel.appendChild(table(["Field", "Value"], rows.map(([k, v]) => [el("td", { text: k }), el("td", {}, [v])])));
 }
@@ -423,29 +556,27 @@ function renderInventory(profile, writable) {
       return [
         el("td", { class: "mono", text: `${it.x},${it.y}` }),
         el("td", { text: it.name }),
-        el("td", { class: "mono num" }, [stackInput]),
-        el("td", { class: "mono num" }, [durInput]),
+        el("td", { class: "mono num" }, [numberField(stackInput)]),
+        el("td", { class: "mono num" }, [numberField(durInput)]),
         el("td", { text: it.equipped ? "yes" : "" }),
         el("td", {}, [removeBtn]),
       ];
     });
-    panel.appendChild(table(["Slot", "Item", "Stack", "Durability", "Equipped", ""], rows));
+    panel.appendChild(table(["Slot", "Item", "Stack", "Durability", "Equipped", ""], rows, [2, 3]));
   }
 
   panel.appendChild(renderAddItemForm(writable));
 }
 
 function renderAddItemForm(writable) {
-  const listId = "item-catalog-list";
-  const nameInput = el("input", { type: "text", list: listId, placeholder: "Prefab name, e.g. Wood", disabled: !writable });
-  const datalist = el("datalist", { id: listId }, catalogData.items.map((n) => el("option", { value: n })));
+  const nameCombo = comboBox(catalogData.items, "Prefab name, e.g. Wood", !writable);
   const stackInput = el("input", { type: "number", min: "1", max: "65535", step: "1", value: "1", class: "mono", disabled: !writable });
   const durInput = el("input", { type: "number", min: "0", step: "any", value: "100", class: "mono", disabled: !writable });
   const allowUnknown = el("input", { type: "checkbox", disabled: !writable });
   const addBtn = el("button", { type: "button", class: "btn-primary", text: "Add item", disabled: !writable });
 
   addBtn.addEventListener("click", () => {
-    const name = nameInput.value.trim();
+    const name = nameCombo.input.value.trim();
     if (!name) { showError("Enter an item name to add."); return; }
     const stack = parseInt(stackInput.value, 10);
     const durability = parseFloat(durInput.value);
@@ -454,15 +585,14 @@ function renderAddItemForm(writable) {
       return;
     }
     const ok = submitEdit({ kind: "item_add", name, stack, durability, allow_unknown_item: allowUnknown.checked });
-    if (ok) nameInput.value = "";
+    if (ok) nameCombo.input.value = "";
   });
 
   return el("div", { class: "add-item-form" }, [
     el("h3", { text: "Add item" }),
-    el("label", { text: "Name " }, [nameInput]),
-    datalist,
-    el("label", { text: " Stack " }, [stackInput]),
-    el("label", { text: " Durability " }, [durInput]),
+    el("label", { text: "Name " }, [nameCombo]),
+    el("label", { text: " Stack " }, [numberField(stackInput)]),
+    el("label", { text: " Durability " }, [numberField(durInput)]),
     el("label", {}, [allowUnknown, el("span", { text: " allow unknown item" })]),
     addBtn,
   ]);

@@ -428,7 +428,19 @@ input, select {
 }
 
 input[type="number"] {
-  width: 8ch;
+  width: 11ch;
+  /* Native spinner arrows eat several px of the content area in a box this
+     narrow, and skill levels have no upper bound by design -- an unlucky
+     value was visibly cut off mid-digit ("297." instead of "297.5") in a
+     real screenshot. Removing them reclaims that space; nothing in this app
+     needs click-to-increment on these fields anyway. */
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 input[type="text"] {
@@ -462,6 +474,119 @@ input[type="color"] {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Custom spinner replacing the browser's native up/down control (removed
+   via the input[type="number"] rules above) -- see app.js::numberField(). */
+
+.number-field {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.number-field input[type="number"] {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.spin-buttons {
+  display: inline-flex;
+  flex-direction: column;
+  border: var(--hair) solid var(--border);
+  border-top-right-radius: var(--r);
+  border-bottom-right-radius: var(--r);
+  overflow: hidden;
+}
+
+.spin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 15px;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.spin-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.spin-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.spin-up {
+  border-bottom: var(--hair) solid var(--border);
+}
+
+/* Plain CSS triangles rather than a unicode glyph or icon font: renders
+   crisply at this size regardless of font/OS, and recolors for free via
+   currentColor on hover/disabled. */
+.spin-btn::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+}
+
+.spin-up::before {
+  border-bottom: 5px solid currentColor;
+}
+
+.spin-down::before {
+  border-top: 5px solid currentColor;
+}
+
+/* Themed replacement for <input list> + <datalist> -- see
+   app.js::comboBox(). The popup positions relative to this wrapper. */
+
+.combobox {
+  position: relative;
+  display: inline-block;
+}
+
+.combobox-input {
+  width: 22ch;
+}
+
+.combobox-list {
+  position: absolute;
+  z-index: 10;
+  top: 100%;
+  left: 0;
+  min-width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 4px 0 0;
+  padding: 4px 0;
+  list-style: none;
+  background: var(--surface);
+  border: var(--hair) solid var(--border-lit);
+  border-radius: var(--r);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.combobox-list li {
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.combobox-list li.active {
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .radio-group label {
