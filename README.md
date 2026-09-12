@@ -2,7 +2,8 @@
 
 A small, practical editor for Valheim `.fch` character saves (game 1.0.7, save formats profile v46 /
 player v33 / inventory v109 / skills v2). Read, inspect, and edit skills, character appearance, and
-inventory — from the command line or a Tkinter GUI.
+inventory — from the command line, a Tkinter GUI, or **the web app, no install needed:**
+**<https://lorcelmao.github.io/ValheimEditor/>**
 
 Built by reverse-engineering the current save format from a sample save plus the installed game's own
 code (see `docs/fch-format-spec.md`). No game code is redistributed here.
@@ -61,6 +62,7 @@ Full command reference, every flag, and a step-by-step in-game test walkthrough:
 | Character | `fch char show`, `fch char set` | Name, beard, hair, colors, model, guardian power |
 | Inventory | `fch inv list/set/remove/add` | Stack, durability, remove, add by prefab name |
 | GUI | `fch gui` | Same edits, same safety checks, a window instead of a terminal |
+| Web | <https://lorcelmao.github.io/ValheimEditor/> | Same edits again, in the browser, nothing uploaded — see [`docs/web-app.md`](docs/web-app.md) |
 
 Not yet supported (by design — see the project plan): map/pin editing, stat-block editing, food and
 custom-data editing, item quality/variant.
@@ -82,12 +84,16 @@ src/fch_editor/
   model.py, versions.py                 # typed save structure, supported-version gate
   codec/                                # decode/encode per section (profile, player, inventory, skills, map)
   edits/                                # typed edit operations + the shared verified-write pipeline
+                                         # (edits/state.py holds AppState, shared by the GUI and web app)
   catalog/                              # item/skill/appearance name lookups
   cli.py, cli_edits.py, cli_inventory.py  # command-line interface
   gui/                                  # Tkinter desktop editor
-docs/            fch-format-spec.md (the format, reverse-engineered), usage-guide.md, validation-log.md
+  web/bridge.py                         # JSON-in/JSON-out facade for the web app, run inside Pyodide
+web/             the web app: static HTML/CSS/JS, no framework, no build step (see docs/web-app.md)
+docs/            fch-format-spec.md (the format, reverse-engineered), usage-guide.md, web-app.md, validation-log.md
 plans/           development plan and phase history
-tools/           format-drift checker, GUI packaging scripts
+tools/           format-drift checker, GUI/web packaging scripts
+.github/workflows/  deploy-web.yml — builds and deploys the web app to GitHub Pages on every push
 REFERENCES/      an older, incompatible open-source editor kept only as historical reference
 ```
 
@@ -98,16 +104,17 @@ REFERENCES/      an older, incompatible open-source editor kept only as historic
 .venv\Scripts\python.exe -m pytest -q
 ```
 
-250+ tests, no external services or fixtures beyond an optional local save dropped in `tests/fixtures/`
-(sample-dependent tests skip cleanly without one). See `docs/fch-format-spec.md` for the format itself and
-`plans/260911-1018-valheim-fch-save-editor/` for how it was built, phase by phase, including what each
-code review found and fixed.
+280+ tests, no external services or fixtures beyond an optional local save dropped in `tests/fixtures/`
+(sample-dependent tests skip cleanly without one). See `docs/fch-format-spec.md` for the format itself,
+`plans/260911-1018-valheim-fch-save-editor/` for how the desktop editor was built, and
+`plans/260912-0936-fch-web-editor-pyodide/` for the web app, phase by phase, including what each code
+review found and fixed.
 
 ## Open items
 
-- **In-game validation is pending** for character and inventory edits, and for this GUI — see
-  `docs/validation-log.md` for what has been confirmed so far (skills editing: confirmed working in-game).
-  Always test on a copy, never your only save.
+- **In-game validation is pending** for character and inventory edits, for the desktop GUI, and for
+  the web app — see `docs/validation-log.md` for what has been confirmed so far (skills editing:
+  confirmed working in-game). Always test on a copy, never your only save.
 - Game updates can change the save format; `tools/spec_fingerprint.py` detects drift against the
   installed game so the spec can be re-verified.
 
