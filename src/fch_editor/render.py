@@ -13,7 +13,7 @@ from .diffing import F32Bits
 from .reader import F32, RawF32
 from .errors import FchError
 from .load import LoadedSave
-from .model import MapData
+from .model import EQUIPPED, MapData
 
 
 def map_summary(raw: bytes | None) -> dict | None:
@@ -69,6 +69,17 @@ def to_json(save: LoadedSave, catalog: ItemCatalog, section: str | None = None) 
     if p.player is not None:
         for item in full["player"]["items"]:
             item["name"] = catalog.label(item["prefab_hash"])
+            # `durability` and `equipped` are computed properties on the Item
+            # dataclass (see model.py), so dataclasses.fields()-based
+            # serialization in _jsonable() only emits the raw fields they're
+            # derived from (`durability_x100`, `flags`). Every JSON consumer
+            # wants the same human-readable values render.item_line() already
+            # uses for its own display, so add them here rather than making
+            # each consumer re-derive them (a `flags & EQUIPPED` bit test is
+            # exactly the kind of format knowledge that should stay out of a
+            # JSON consumer like the web UI).
+            item["durability"] = item["durability_x100"] * 0.01
+            item["equipped"] = bool(item["flags"] & EQUIPPED)
         for skill in full["player"]["skills"]:
             skill["name"] = skill_name(skill["type"])
     sections = {"stats": full["stat_blocks"], "worlds": full["worlds"], "player": full["player"],

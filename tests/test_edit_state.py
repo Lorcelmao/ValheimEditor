@@ -8,8 +8,8 @@ import pytest
 from fch_editor.edits.character import SetColor, SetGuardianPower, SetHair, SetName
 from fch_editor.edits.inventory import AddItem, RemoveItem, SetItemField
 from fch_editor.edits.skills import SetSkillLevel
+from fch_editor.edits.state import AppState
 from fch_editor.errors import EditError, UnsafeWrite
-from fch_editor.gui.state import AppState
 from fch_editor.load import load_bytes
 from fch_editor.stable_hash import stable_hash
 
