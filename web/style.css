@@ -1,0 +1,598 @@
+/* Design tokens — see plans/260912-0936-fch-web-editor-pyodide/design-system.md.
+   Every rule below this block references a token; no raw hex elsewhere in this file. */
+:root {
+  /* surfaces — warm, charred-wood neutrals */
+  --bg:          #17140f;
+  --surface:     #211c15;   /* panels, cards */
+  --surface-2:   #2b241b;   /* table headers, raised rows */
+  --border:      #3d3427;   /* hairlines */
+  --border-lit:  #55492f;   /* hover / focus edges */
+
+  /* text — parchment, not pure white */
+  --text:        #ede4d3;
+  --text-muted:  #a2957e;
+  --text-dim:    #6f6553;
+
+  /* accent — aged brass */
+  --accent:      #c8a24a;
+  --accent-hot:  #e0b95c;
+  --on-accent:   #17140f;   /* text on a filled accent button */
+
+  /* semantic */
+  --ok:      #7a9a4e;   /* moss  — added, success */
+  --warn:    #d08a2c;   /* amber — warnings, safety banner */
+  --danger:  #c0483a;   /* rust  — destructive, removed */
+  --info:    #5b8ba8;   /* steel — neutral notices */
+
+  /* geometry — iron and timber, not bubbles */
+  --r:      3px;        /* radius, everywhere */
+  --hair:   1px;
+  --space:  4px;        /* base unit; use multiples */
+
+  /* type */
+  --font-display: "Cinzel", Georgia, serif;
+  --font-ui: system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url("fonts/cinzel-variable.woff2") format("woff2-variations"), url("fonts/cinzel-variable.woff2") format("woff2");
+}
+
+/* --- reset & base ------------------------------------------------------ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right));
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Subtle grain: stops the flat-digital look without touching legibility. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  z-index: 1000;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0;
+}
+
+button, input, select {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+/* --- 1. app bar ---------------------------------------------------------- */
+
+.app-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-block: 12px;
+  border-bottom: var(--hair) solid var(--border);
+}
+
+.app-bar h1 {
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.badge {
+  margin-left: auto;
+  padding: 2px 10px;
+  border-radius: var(--r);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-ok {
+  background: color-mix(in srgb, var(--ok) 20%, transparent);
+  color: var(--ok);
+}
+
+.badge-warn {
+  background: color-mix(in srgb, var(--warn) 20%, transparent);
+  color: var(--warn);
+}
+
+/* --- 2. safety banner ---------------------------------------------------- */
+
+.safety-banner {
+  border-left: 3px solid var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+  padding: 10px 14px;
+  margin-block: 12px;
+  border-radius: 0 var(--r) var(--r) 0;
+}
+
+.safety-banner p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+/* Read-only reasons / warnings notices reuse the same left-rule pattern. */
+
+.notice {
+  border-left: 3px solid;
+  padding: 8px 14px;
+  margin-block: 8px;
+  border-radius: 0 var(--r) var(--r) 0;
+}
+
+.notice p {
+  margin: 2px 0;
+  font-size: 0.9rem;
+}
+
+.notice-danger {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.notice-warn {
+  border-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+
+/* --- 3. bootstrap progress ------------------------------------------------ */
+
+#bootstrap {
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: 32px;
+}
+
+.progress-stages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+}
+
+.progress-stages li {
+  position: relative;
+  padding-left: 24px;
+}
+
+.progress-stages li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: var(--hair) solid var(--border-lit);
+  background: transparent;
+}
+
+.progress-stages li.done {
+  color: var(--text-muted);
+}
+
+.progress-stages li.done::before {
+  background: var(--ok);
+  border-color: var(--ok);
+}
+
+.progress-stages li.active {
+  color: var(--accent-hot);
+  font-weight: 600;
+}
+
+.progress-stages li.active::before {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* --- error area ------------------------------------------------------- */
+
+#error-area {
+  border-left: 3px solid var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  padding: 10px 14px;
+  margin-block: 12px;
+  border-radius: 0 var(--r) var(--r) 0;
+  white-space: pre-wrap;
+  font-size: 0.9rem;
+}
+
+#reading-status {
+  padding: 10px 14px;
+  margin-block: 12px;
+}
+
+/* --- 4. drop zone ---------------------------------------------------------- */
+
+#drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--r);
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  transition: border-color 150ms, background-color 150ms;
+}
+
+#drop-zone.drag-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  color: var(--text);
+}
+
+.file-picker-label {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 20px;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: var(--r);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.file-picker-label:hover {
+  background: var(--accent-hot);
+}
+
+.file-picker-label input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+/* --- 5. tabs ---------------------------------------------------------- */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: var(--hair) solid var(--border);
+  margin-top: 8px;
+}
+
+.tabs [role="tab"] {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tabs [role="tab"]:hover {
+  color: var(--text);
+}
+
+.tabs [role="tab"][aria-selected="true"] {
+  color: var(--accent-hot);
+  border-bottom-color: var(--accent);
+}
+
+.tab-panels {
+  padding-block: 16px;
+}
+
+/* --- 6. data tables ------------------------------------------------------ */
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+thead {
+  background: var(--surface-2);
+  position: sticky;
+  top: 0;
+}
+
+th, td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: var(--hair) solid var(--border);
+}
+
+th {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+td.num, th.num {
+  text-align: right;
+}
+
+tbody tr:hover {
+  background: var(--surface-2);
+}
+
+/* --- actions / buttons -------------------------------------------------- */
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+button {
+  cursor: pointer;
+  border-radius: var(--r);
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  min-height: 32px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hot);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: var(--hair) solid var(--border-lit);
+}
+
+.btn-outline:hover {
+  border-color: var(--accent);
+}
+
+#download-confirmation {
+  margin-top: 10px;
+  color: var(--ok);
+  font-size: 0.9rem;
+}
+
+/* --- 7. form controls ------------------------------------------------- */
+
+input, select {
+  background: var(--surface-2);
+  color: var(--text);
+  border: var(--hair) solid var(--border);
+  border-radius: var(--r);
+  padding: 5px 8px;
+  min-height: 32px;
+}
+
+input[type="number"] {
+  width: 8ch;
+}
+
+input[type="text"] {
+  width: 20ch;
+}
+
+input[type="checkbox"], input[type="radio"] {
+  min-height: auto;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+
+input[type="color"] {
+  padding: 2px;
+  width: 44px;
+  min-height: 32px;
+  cursor: pointer;
+}
+
+.btn-danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.color-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.radio-group label {
+  margin-right: 12px;
+}
+
+.set-all-row, .add-item-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: var(--hair) solid var(--border);
+}
+
+.add-item-form h3 {
+  font-size: 1rem;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+/* --- 8. pending-changes panel ------------------------------------------- */
+
+#pending-panel {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: var(--hair) solid var(--border);
+}
+
+#pending-panel h2 {
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+#pending-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#pending-list li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface);
+  border: var(--hair) solid var(--border);
+  border-radius: var(--r);
+  padding: 8px 10px;
+}
+
+.pending-diff {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* --- 9. confirm dialog --------------------------------------------------- */
+
+#confirm-dialog {
+  background: var(--surface);
+  color: var(--text);
+  border: var(--hair) solid var(--border-lit);
+  border-radius: var(--r);
+  padding: 20px;
+  max-width: min(640px, 92vw);
+  width: 100%;
+}
+
+#confirm-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+#confirm-dialog h2 {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+
+.diff-body {
+  max-height: 50vh;
+  overflow-y: auto;
+  font-size: 0.85rem;
+  border: var(--hair) solid var(--border);
+  border-radius: var(--r);
+  padding: 8px 0;
+}
+
+.diff-line {
+  padding: 3px 10px 3px 14px;
+  border-left: 3px solid transparent;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Colour is never the only signal: every line above also carries a literal
+   +/-/~ prefix (see app.js::renderConfirmDiff), so this still reads in
+   greyscale or for a colour-blind viewer. */
+
+.diff-add {
+  border-left-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+}
+
+.diff-remove {
+  border-left-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.diff-change {
+  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* --- responsive ----------------------------------------------------------
+   Side gutters come from body's padding-inline; nothing here needs its own
+   horizontal margin at narrow widths. Tabs wrap rather than overflow. */
+
+@media (max-width: 480px) {
+  .tabs {
+    flex-wrap: wrap;
+  }
+  .app-bar {
+    flex-wrap: wrap;
+  }
+  .badge {
+    margin-left: 0;
+  }
+}

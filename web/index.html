@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Valheim FCH Editor</title>
+  <meta name="description" content="Edit Valheim character saves in your browser. Nothing is uploaded.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-bar">
+    <h1>Valheim FCH Editor</h1>
+    <span id="file-name" class="mono muted"></span>
+    <span id="status-badge" class="badge" hidden></span>
+  </header>
+
+  <div class="safety-banner">
+    <p>
+      This edits a copy. Close Valheim before replacing your save, and keep the original —
+      the browser cannot make a backup for you. Your save is never uploaded; everything runs
+      on this device.
+    </p>
+  </div>
+
+  <main id="app">
+    <!-- Bootstrap: shown until Pyodide + the editor package are ready. -->
+    <section id="bootstrap" aria-live="polite">
+      <ol class="progress-stages">
+        <li data-stage="runtime">Loading runtime…</li>
+        <li data-stage="editor">Installing editor…</li>
+        <li data-stage="ready">Ready</li>
+      </ol>
+    </section>
+
+    <!-- Error area: bootstrap failures and open() failures both land here. -->
+    <section id="error-area" role="alert" aria-live="polite" hidden></section>
+
+    <!-- Fourth bootstrap stage ("reading save"): shown only while a picked
+         file is being parsed, since that happens after the runtime/editor/
+         ready stages above are already hidden. -->
+    <p id="reading-status" class="mono muted" aria-live="polite" hidden>Reading save…</p>
+
+    <!-- File picker: shown once ready, until a save is open. -->
+    <section id="drop-zone" hidden>
+      <p>Drag a <code>.fch</code> save here, or</p>
+      <label class="file-picker-label">
+        Choose file
+        <input type="file" id="file-input" accept=".fch">
+      </label>
+    </section>
+
+    <!-- The open save: shown once a file has loaded (read-only or not). -->
+    <section id="viewer" hidden>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="overview" aria-selected="true">Overview</button>
+        <button type="button" role="tab" data-tab="skills" aria-selected="false">Skills</button>
+        <button type="button" role="tab" data-tab="character" aria-selected="false">Character</button>
+        <button type="button" role="tab" data-tab="inventory" aria-selected="false">Inventory</button>
+      </div>
+
+      <div id="reasons-area" hidden></div>
+      <div id="warnings-area" hidden></div>
+
+      <div class="tab-panels">
+        <div data-panel="overview" role="tabpanel"></div>
+        <div data-panel="skills" role="tabpanel" hidden></div>
+        <div data-panel="character" role="tabpanel" hidden></div>
+        <div data-panel="inventory" role="tabpanel" hidden></div>
+      </div>
+
+      <!-- Component 8: one row per pending edit (not per field -- see
+           Session.list_pending()), each removable on its own. -->
+      <section id="pending-panel" aria-live="polite">
+        <h2>Pending changes</h2>
+        <ul id="pending-list"></ul>
+        <p id="pending-empty" class="muted">No pending changes.</p>
+        <button type="button" id="discard-all-btn" class="btn-outline" hidden>Discard all</button>
+      </section>
+
+      <div class="actions">
+        <button type="button" id="save-btn" class="btn-primary">Download unchanged</button>
+        <button type="button" id="open-another-btn" class="btn-outline">Open another file</button>
+      </div>
+      <p id="download-confirmation" role="status" hidden></p>
+    </section>
+  </main>
+
+  <!-- Component 9: the confirmation modal. Cancel/close-without-choosing both
+       count as cancel (writes nothing) -- see app.js's dialog handling. -->
+  <dialog id="confirm-dialog">
+    <h2>Confirm changes</h2>
+    <div id="confirm-diff" class="mono diff-body"></div>
+    <div class="actions">
+      <button type="button" id="confirm-write-btn" class="btn-primary">Write to file</button>
+      <button type="button" id="confirm-cancel-btn" class="btn-outline">Cancel</button>
+    </div>
+  </dialog>
+
+  <!-- Pinned exactly: an upstream release must never silently change float or
+       stdlib behaviour under this app (see phase 1's spike, which verified
+       this exact version's WASM float/NaN semantics match native CPython). -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v314.0.6/full/pyodide.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
