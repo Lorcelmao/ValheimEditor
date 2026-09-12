@@ -1,17 +1,19 @@
 """Apply edits to a save without touching anything else.
 
 Every edit mutates a copy of the model and returns the diff-path prefixes it
-is allowed to change. The pipeline then proves, before any byte reaches disk:
+is allowed to change. This module proves, before any byte is returned:
   1. the edit stayed inside its declared scope (blast-radius check), and
   2. the encoded file decodes back to exactly the intended model.
-Writing goes through safe_io, which re-verifies the bytes actually on disk.
+
+Pure by design — no filesystem or process access, only `copy`, `dataclasses`,
+`typing`, and sibling package modules — so it can run anywhere CPython runs,
+including inside Pyodide in a browser. Actually writing the result to disk
+(backups, atomic replace, the running-game guard) is `edits/write.py`.
 """
 import copy
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Protocol
 
-from .. import safe_io
 from ..diffing import diff
 from ..errors import UnsafeWrite
 from ..load import LoadedSave, encode_save, load_bytes
@@ -71,32 +73,12 @@ def apply_edits(save: LoadedSave, edits: list[Edit]) -> EditResult:
     return EditResult(data=data, profile=intended, changes=changes, original=save.original)
 
 
-def check_destination(source: Path, out: Path | None, in_place: bool, force: bool = False) -> Path:
-    """Resolve and validate where an edit will be written, before any work is shown."""
-    if in_place == (out is not None):
-        raise UnsafeWrite("choose exactly one of --out FILE or --in-place")
-    if in_place:
-        return Path(source)
-    target = Path(out)
-    if target.resolve() == Path(source).resolve():
-        raise UnsafeWrite("--out is the source file; use --in-place to overwrite it (a backup is kept)")
-    if target.is_dir():
-        raise UnsafeWrite(f"--out {target} is a folder; give a file name")
-    if not target.parent.is_dir():
-        raise UnsafeWrite(f"folder {target.parent} does not exist")
-    if target.exists() and not force:
-        raise UnsafeWrite(f"{target} already exists; pass --force to replace it (a backup is kept)")
-    return target
-
-
-def write_result(result: EditResult, source: Path, out: Path | None, in_place: bool,
-                 force: bool = False) -> Path | None:
-    """Write the edited save to `out` (or over `source` when `in_place`).
-    Returns the backup path if an existing file was replaced."""
-    target = check_destination(source, out, in_place, force)
-    if not force and safe_io.is_game_running():
-        raise UnsafeWrite("Valheim is running and rewrites saves on exit; close it first (or pass --force)")
-    if in_place and Path(source).read_bytes() != result.original:
-        # Something (the game, a cloud sync) saved it after we read it; don't clobber that.
-        raise UnsafeWrite(f"{source} changed since it was read; nothing written, run the command again")
-    return safe_io.write_verified(target, result.data, lambda data: _check_written(data, result.profile))
+def preview_edits(save: LoadedSave, pending: list[Edit]) -> EditResult:
+    """`apply_edits(save, pending)`, or an identity result when nothing is
+    pending yet. Every front end that holds a growing list of not-yet-written
+    edits (the Tkinter GUI's `AppState`, the web `Session`) needs exactly this
+    "what would writing now produce" view — factored out here so both share
+    one definition instead of two independently-maintained copies."""
+    if pending:
+        return apply_edits(save, pending)
+    return EditResult(data=save.original, profile=copy.deepcopy(save.profile), changes=[], original=save.original)

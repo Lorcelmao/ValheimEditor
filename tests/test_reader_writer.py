@@ -47,6 +47,22 @@ def test_writer_rejects_out_of_range():
         Writer().string("\ud800")  # lone surrogate cannot be UTF-8 encoded
 
 
+def test_u8_and_num_items_reject_non_int_with_a_clean_valueerror():
+    """u8/num_items are hand-rolled (no struct.Struct backing them), unlike
+    u16/i32/i64/f32, whose struct.pack already turns a wrong type into a
+    caught struct.error. Without their own explicit type check, a float in
+    range (e.g. 5.0) would pass the bounds check and only fail inside
+    bytearray.append()/a bit-shift, as a raw, uncaught TypeError -- exactly
+    what let a float item slot crash fch_editor.web.bridge.Session.add_edit
+    (see tests/test_web_bridge.py's regression test for the caller-facing
+    side of this bug)."""
+    for bad in (5.0, "5", True, None):
+        with pytest.raises(ValueError):
+            Writer().u8(bad)
+        with pytest.raises(ValueError):
+            Writer().num_items(bad)
+
+
 def test_raw_f32_requires_four_bytes():
     with pytest.raises(ValueError):
         RawF32(b"\x00")

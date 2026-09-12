@@ -1,6 +1,6 @@
 """Tk application shell: menu, tabs, status bar, and the open/save flow.
 
-Every write still goes through `edits.pipeline.write_result`; the GUI's own
+Every write still goes through `edits.write.write_result`; the GUI's own
 confirmation dialog and running-game warning stand in for the CLI's
 `--dry-run`/printed diff and `--force` flag.
 """
@@ -10,11 +10,11 @@ from tkinter import filedialog, ttk
 
 from .. import safe_io
 from ..catalog.items import ItemCatalog
-from ..edits.pipeline import UnsafeWrite, write_result
-from ..errors import FchError
+from ..edits.state import AppState
+from ..edits.write import write_result
+from ..errors import FchError, UnsafeWrite
 from ..load import load_file
 from . import dialogs
-from .state import AppState
 from .tabs.character import CharacterTab
 from .tabs.inventory import InventoryTab
 from .tabs.overview import OverviewTab

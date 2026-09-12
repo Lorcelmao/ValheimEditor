@@ -1,14 +1,17 @@
-"""The shared edit pipeline: scope checks, write-back verification, safe writing."""
+"""The pure edit pipeline: scope checks and write-back verification.
+
+No filesystem access here — see test_write.py for check_destination/write_result,
+which is exactly the boundary edits/pipeline.py vs edits/write.py encodes.
+"""
 import copy
 from dataclasses import dataclass
 
 import pytest
 
-from fch_editor import safe_io
 from fch_editor.edits import pipeline
-from fch_editor.edits.pipeline import apply_edits, check_destination, write_result
+from fch_editor.edits.pipeline import apply_edits
 from fch_editor.errors import UnsafeWrite
-from fch_editor.load import load_bytes, load_file
+from fch_editor.load import load_bytes
 
 
 @dataclass
@@ -24,11 +27,6 @@ class Rename:
 @pytest.fixture
 def save(sample_bytes):
     return load_bytes(sample_bytes)
-
-
-@pytest.fixture(autouse=True)
-def game_not_running(monkeypatch):
-    monkeypatch.setattr(safe_io, "is_game_running", lambda: False)
 
 
 def test_in_scope_edit_produces_verified_bytes(save):
@@ -55,52 +53,6 @@ def test_read_only_save_is_refused(save):
         apply_edits(save, [Rename("Hero", ["name"])])
 
 
-def test_write_requires_exactly_one_destination(save, tmp_path):
-    result = apply_edits(save, [Rename("Hero", ["name"])])
-    src = tmp_path / "hero.fch"
-    src.write_bytes(save.original)
-    with pytest.raises(UnsafeWrite, match="exactly one"):
-        write_result(result, src, None, in_place=False)
-    with pytest.raises(UnsafeWrite, match="--in-place"):
-        write_result(result, src, src, in_place=False)
-
-
-def test_write_out_and_in_place(save, tmp_path):
-    result = apply_edits(save, [Rename("Hero", ["name"])])
-    src = tmp_path / "hero.fch"
-    src.write_bytes(save.original)
-    out = tmp_path / "copy.fch"
-    assert write_result(result, src, out, in_place=False) is None
-    assert load_file(out).profile.name == "Hero" and src.read_bytes() == save.original
-    backup = write_result(result, src, None, in_place=True)
-    assert load_file(src).profile.name == "Hero" and backup.read_bytes() == save.original
-
-
-def test_destination_checks(save, tmp_path):
-    src = tmp_path / "hero.fch"
-    src.write_bytes(save.original)
-    existing = tmp_path / "other.fch"
-    existing.write_bytes(b"another character")
-    with pytest.raises(UnsafeWrite, match="is a folder"):
-        check_destination(src, tmp_path, in_place=False)
-    with pytest.raises(UnsafeWrite, match="does not exist"):
-        check_destination(src, tmp_path / "missing" / "x.fch", in_place=False)
-    with pytest.raises(UnsafeWrite, match="already exists"):
-        check_destination(src, existing, in_place=False)
-    assert check_destination(src, existing, in_place=False, force=True) == existing
-
-
-def test_in_place_refuses_if_source_changed_after_reading(save, tmp_path):
-    src = tmp_path / "hero.fch"
-    src.write_bytes(save.original)
-    result = apply_edits(save, [Rename("Hero", ["name"])])
-    changed = save.original[:-1] + bytes([save.original[-1] ^ 0xFF])  # the game saved meanwhile
-    src.write_bytes(changed)
-    with pytest.raises(UnsafeWrite, match="changed since it was read"):
-        write_result(result, src, None, in_place=True)
-    assert src.read_bytes() == changed
-
-
 def test_write_back_mismatch_is_refused(save, monkeypatch):
     # An encoder bug that writes something other than the intended model must be caught.
     real_encode = pipeline.encode_save
@@ -125,12 +77,34 @@ def test_unencodable_value_is_a_clean_error(save):
         apply_edits(save, [HugeId()])
 
 
-def test_running_game_blocks_write_unless_forced(save, tmp_path, monkeypatch):
-    monkeypatch.setattr(safe_io, "is_game_running", lambda: True)
-    result = apply_edits(save, [Rename("Hero", ["name"])])
-    out = tmp_path / "copy.fch"
-    with pytest.raises(UnsafeWrite, match="running"):
-        write_result(result, tmp_path / "src.fch", out, in_place=False)
-    assert not out.exists()
-    write_result(result, tmp_path / "src.fch", out, in_place=False, force=True)
-    assert out.exists()
+def test_pipeline_module_has_no_filesystem_or_process_imports():
+    """Guards the Pyodide boundary: pipeline.py must stay importable with no
+    subprocess/tempfile/os/pathlib access, so it can run inside a browser
+    runtime that has none of those reliably. safe_io (backups, atomic replace,
+    the running-game check) belongs only to edits/write.py.
+
+    Checks the actual AST import nodes rather than the module's post-import
+    namespace, so it also catches `from ..safe_io import write_verified` (a
+    specific-name import binds something other than "safe_io") and a
+    reintroduced `from pathlib import Path` -- neither of which a
+    namespace/vars() check would notice.
+    """
+    import ast
+    import pathlib as _pathlib
+
+    forbidden_modules = {"subprocess", "tempfile", "os", "pathlib"}
+    forbidden_names = {"safe_io", "Path"}
+
+    source = _pathlib.Path(pipeline.__file__).read_text(encoding="utf-8")
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                top = alias.name.split(".")[0]
+                assert top not in forbidden_modules, f"pipeline.py must not `import {alias.name}`"
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            assert not module.endswith("safe_io"), f"pipeline.py must not import from {module!r}"
+            assert module.split(".")[0] not in forbidden_modules, f"pipeline.py must not import from {module!r}"
+            for alias in node.names:
+                assert alias.name not in forbidden_names, \
+                    f"pipeline.py must not import {alias.name!r} from {module!r}"

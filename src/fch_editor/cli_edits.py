@@ -12,9 +12,10 @@ from pathlib import Path
 from .catalog.appearance import GUARDIAN_POWERS
 from .catalog.enums import skill_name
 from .edits import character as ch
-from .edits.pipeline import apply_edits, check_destination, write_result
+from .edits.pipeline import apply_edits
 from .edits.skills import ALL, SetSkillLevel, parse_level, parse_skill
 from .edits.values import parse_number
+from .edits.write import check_destination, write_result
 from .errors import EditError
 from .load import load_file
 from .render import diff_text, f32_text

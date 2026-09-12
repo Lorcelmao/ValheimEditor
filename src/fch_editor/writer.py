@@ -25,6 +25,14 @@ class Writer:
             raise ValueError(f"{name} value {v!r} out of range: {e}") from None
 
     def u8(self, v: int) -> None:
+        # Hand-rolled rather than struct-packed (there is no 1-byte struct
+        # code worth a Struct object here), so — unlike u16/i32/i64/f32,
+        # whose struct.pack already rejects a non-int with struct.error —
+        # this needs its own explicit type check to keep the same contract:
+        # a wrong type is a clean ValueError, never bytearray.append's raw
+        # TypeError leaking out of the codec layer.
+        if not isinstance(v, int) or isinstance(v, bool):
+            raise ValueError(f"u8 value {v!r} must be an integer")
         if not 0 <= v <= 0xFF:
             raise ValueError(f"u8 value {v!r} out of range")
         self._buf.append(v)
@@ -64,6 +72,11 @@ class Writer:
         self._buf += data
 
     def num_items(self, n: int) -> None:
+        # Same hand-rolled-encoding gap as u8 (see its comment): a float n
+        # would pass the range check below, then fail with a raw TypeError
+        # from either `.append(n)` or the bit-shift, instead of ValueError.
+        if not isinstance(n, int) or isinstance(n, bool):
+            raise ValueError(f"item count {n!r} must be an integer")
         if not 0 <= n <= 0x7FFF:
             raise ValueError(f"item count {n} out of range 0..32767")
         if n < 0x80:
