@@ -118,3 +118,8 @@ release-manifest.json
 .venv/
 *.egg-info/
 .pytest_cache/
+
+# Web UI test dependencies and the generated module shims those tests import.
+web/tests/node_modules/
+web/tests/package-lock.json
+web/tests/.*.undertest.mjs

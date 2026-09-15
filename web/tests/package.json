@@ -1,0 +1,12 @@
+{
+  "name": "fch-editor-web-tests",
+  "private": true,
+  "type": "module",
+  "description": "DOM-level checks for web/app.js. Test-only: the app itself has no dependencies and no build step.",
+  "scripts": {
+    "test": "node inventory-grid.test.mjs && node item-picker.test.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}

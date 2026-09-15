@@ -39,6 +39,20 @@ jobs:
       - name: Run the full test suite
         run: pytest -q
 
+      # pytest never executes a line of web/app.js -- it can only prove the
+      # bytes a download writes are right, not that the page renders them. These
+      # drive the real app.js under jsdom. Test-only dependency; the app itself
+      # still ships with no dependencies and no build step.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run the web UI tests
+        working-directory: web/tests
+        run: |
+          npm install
+          npm test
+
       - name: Build the wheel
         run: |
           rm -rf build src/*.egg-info
