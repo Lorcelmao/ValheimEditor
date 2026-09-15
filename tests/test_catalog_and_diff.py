@@ -1,8 +1,10 @@
 import copy
+from importlib.resources import files
 
 import pytest
 
 from fch_editor import model
+from fch_editor.catalog import items as items_module
 from fch_editor.catalog.enums import STAT_NAMES, skill_name
 from fch_editor.catalog.items import ItemCatalog, hash_hex
 from fch_editor.diffing import diff, flatten
@@ -24,6 +26,47 @@ def test_unknown_hash_label_and_extra_file(tmp_path):
     extra = tmp_path / "more.txt"
     extra.write_text("# comment\nBrandNewItem\n", encoding="utf-8")
     assert ItemCatalog.load([extra]).label(h) == "BrandNewItem"
+
+
+def test_no_two_prefab_names_share_a_hash():
+    """Saves store only stable_hash(prefabName), so a collision between two
+    catalog entries would make one item permanently display as the other --
+    silently, with nothing to notice it. Cheap to check, nasty if it ever
+    happens (adding names is routine; the catalog grew 685 -> 1164 once).
+
+    Reads the RAW parsed name list, not ItemCatalog.names(): the catalog
+    stores {stable_hash(name): name}, so a collision has already collapsed
+    one of the two names before names() is ever called -- checking there
+    would be vacuous and could never fail.
+    """
+    raw = items_module._parse(
+        files("fch_editor.catalog").joinpath("data/items.txt").read_text(encoding="utf-8")
+    )
+    by_hash: dict[int, str] = {}
+    collisions = []
+    for name in raw:
+        h = stable_hash(name)
+        if h in by_hash and by_hash[h] != name:
+            collisions.append((by_hash[h], name))
+        by_hash[h] = name
+    assert not collisions, f"prefab names collide under stable_hash: {collisions}"
+    # Every parsed name survives into the catalog -- i.e. nothing was silently
+    # swallowed by a collision or a duplicate line.
+    assert len(ItemCatalog.load().names()) == len(set(raw))
+
+
+@pytest.mark.parametrize("prefab", [
+    "Wood",                    # vanilla staple
+    "ArmorBronzeChest",        # early-game armour
+    "Upgrader3Weapon",         # Deep North "Silver Battle Idol"
+    "AxeGold",                 # Ashlands Nord tier
+    "MoldAtgeir",              # Ashlands casting/mould system
+])
+def test_catalog_covers_items_across_game_eras(prefab):
+    """Guards against the catalog silently falling behind the game again: it
+    was once 685 of 1164 real ItemDrop prefabs, so every item added after that
+    list was cut showed as #hexhash and could not be added by name at all."""
+    assert prefab in ItemCatalog.load()
 
 
 def test_enum_tables():
