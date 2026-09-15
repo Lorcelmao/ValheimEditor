@@ -326,4 +326,8 @@ def test_catalog_exposes_every_reference_list():
     assert {"id": 102, "name": "Run"} in cat["skills"]
     assert "Beard5" in cat["beards"] and "Hair5" in cat["hairs"]
     assert {"id": "GP_Eikthyr", "name": "Eikthyr"} in cat["guardian_powers"]
-    assert "Wood" in cat["items"]
+    # Entries, not bare names: the picker needs the in-game name to show and
+    # the prefab name to send. `prefab` is what an item_add spec carries.
+    assert {"prefab": "Wood", "display": "Wood", "type": None} in cat["items"]
+    assert {"prefab": "ArmorBronzeChest", "display": "Bronze Plate Tunic", "type": None} in cat["items"]
+    assert all(e["prefab"] for e in cat["items"])

@@ -277,8 +277,13 @@ let comboBoxIdCounter = 0;
 // aria-activedescendant kept in sync) so it is at least as accessible as
 // what it replaces, not just visually similar. Filters `options` by
 // substring, case-insensitive, capped at 50 shown matches (the dataset
-// itself, ~590 catalog entries, needs no virtualization -- filtering to a
+// itself, ~1160 catalog entries, needs no virtualization -- filtering to a
 // short list on every keystroke is cheap).
+//
+// `options` are `{value, label, hint}`: `value` is what lands in the input
+// and what an edit spec carries, `label` is what a human recognises, `hint`
+// is shown muted beside it. Typing matches against all three, so an item is
+// findable by either its in-game name or its prefab codename.
 function comboBox(options, placeholder, disabled) {
   const wrapper = el("span", { class: "combobox" });
   const listId = `combobox-list-${comboBoxIdCounter++}`;
@@ -294,14 +299,27 @@ function comboBox(options, placeholder, disabled) {
 
   let matches = [];
   let activeIndex = -1;
+  // Lowercased once per option, not per keystroke: 1,164 entries x 2 fields
+  // is enough string work to notice while typing.
+  const haystacks = options.map((o) => `${o.label} ${o.value}`.toLowerCase());
 
   function renderMatches() {
     const q = input.value.trim().toLowerCase();
-    matches = q ? options.filter((o) => o.toLowerCase().includes(q)).slice(0, 50) : [];
+    matches = [];
+    if (q) {
+      for (const [i, hay] of haystacks.entries()) {
+        if (hay.includes(q)) matches.push(options[i]);
+        if (matches.length === 50) break;
+      }
+    }
     activeIndex = -1;
     listbox.innerHTML = "";
-    for (const [i, name] of matches.entries()) {
-      listbox.appendChild(el("li", { id: `${listId}-opt-${i}`, role: "option", text: name }));
+    for (const [i, o] of matches.entries()) {
+      const li = el("li", { id: `${listId}-opt-${i}`, role: "option" }, [
+        el("span", { class: "combobox-label", text: o.label }),
+      ]);
+      if (o.hint) li.appendChild(el("span", { class: "combobox-hint mono", text: o.hint }));
+      listbox.appendChild(li);
     }
     const open = matches.length > 0;
     listbox.hidden = !open;
@@ -324,7 +342,7 @@ function comboBox(options, placeholder, disabled) {
 
   function choose(i) {
     if (i < 0 || i >= matches.length) return;
-    input.value = matches[i];
+    input.value = matches[i].value;
     close();
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
@@ -555,7 +573,14 @@ function renderInventory(profile, writable) {
       removeBtn.addEventListener("click", () => submitEdit({ kind: "item_remove", slot: [it.x, it.y] }));
       return [
         el("td", { class: "mono", text: `${it.x},${it.y}` }),
-        el("td", { text: it.name }),
+        // Display name primary, prefab name secondary -- never only the
+        // display name: the prefab is the identifier the save, the CLI and
+        // `item_add` all speak. Suppressed when they're the same string, or
+        // when the item isn't in the catalog at all (`name` is then #hexhash).
+        el("td", {}, it.display_name === it.name
+          ? [el("span", { text: it.name })]
+          : [el("span", { text: it.display_name }),
+             el("span", { class: "item-prefab mono", text: it.name })]),
         el("td", { class: "mono num" }, [numberField(stackInput)]),
         el("td", { class: "mono num" }, [numberField(durInput)]),
         el("td", { text: it.equipped ? "yes" : "" }),
@@ -569,7 +594,13 @@ function renderInventory(profile, writable) {
 }
 
 function renderAddItemForm(writable) {
-  const nameCombo = comboBox(catalogData.items, "Prefab name, e.g. Wood", !writable);
+  // The prefab name stays the value: it is what `item_add` hashes, and what a
+  // user retypes from the CLI or a bug report. The in-game name is the label
+  // because "Bronze Cuirass" is the only half of the pair most players know.
+  const options = catalogData.items.map((it) => ({
+    value: it.prefab, label: it.display || it.prefab, hint: it.display ? it.prefab : "",
+  }));
+  const nameCombo = comboBox(options, "Item name, e.g. Wood or ArmorBronzeChest", !writable);
   const stackInput = el("input", { type: "number", min: "1", max: "65535", step: "1", value: "1", class: "mono", disabled: !writable });
   const durInput = el("input", { type: "number", min: "0", step: "any", value: "100", class: "mono", disabled: !writable });
   const allowUnknown = el("input", { type: "checkbox", disabled: !writable });

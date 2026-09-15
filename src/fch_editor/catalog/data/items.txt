@@ -1,1168 +1,1172 @@
-# Valheim item prefab names (one per line): every prefab carrying an ItemDrop component,
-# generated from Valheim 1.0.7 by JotunnDoc (valheim-modding.github.io/Jotunn, 2026-09-15).
-# Includes some creature-attack/NPC prefabs, which are harmless here and keep hash lookup complete;
+# Valheim item prefab names, one per line, in the format:
+#     Prefab | Display Name | ItemType        (every column after the first is optional)
+# A line with no '|' is a bare prefab name and stays valid -- that is what --items FILE accepts.
+# An empty column means 'unknown', not an error; ItemType is unfilled pending a game dump.
+# Every prefab carrying an ItemDrop component, with English display names, generated from
+# Valheim 1.0.7 by JotunnDoc (valheim-modding.github.io/Jotunn, 2026-09-15). Includes some
+# creature-attack/NPC prefabs, which are harmless here and keep hash lookup complete;
 # extend with --items FILE for items added in later game versions.
-Abomination_attack1
-Abomination_attack2
-Abomination_attack3
-Acorn
-Amber
-AmberPearl
-AncientCoin
-AncientGemstoneBlack
-AncientGemstoneGreen
-AncientGemstoneOrange
-AncientGemstonePurple
-AncientSeed
-ArmorAshlandsMediumChest
-ArmorAshlandsMediumlegs
-ArmorBerserkerChest
-ArmorBerserkerLegs
-ArmorBerserkerUndeadChest
-ArmorBerserkerUndeadLegs
-ArmorBronzeChest
-ArmorBronzeLegs
-ArmorCarapaceChest
-ArmorCarapaceLegs
-ArmorDeepNorthHeavyChest
-ArmorDeepNorthHeavylegs
-ArmorDeepNorthMageChest
-ArmorDeepNorthMagelegs
-ArmorDeepNorthMediumChest
-ArmorDeepNorthMediumlegs
-ArmorDress1
-ArmorDress10
-ArmorDress2
-ArmorDress3
-ArmorDress4
-ArmorDress5
-ArmorDress6
-ArmorDress7
-ArmorDress8
-ArmorDress9
-ArmorFenringChest
-ArmorFenringLegs
-ArmorFlametalChest
-ArmorFlametalLegs
-ArmorGoldHeavyChestUncooked
-ArmorGoldHeavyHelmetUncooked
-ArmorGoldHeavyLegsUncooked
-ArmorGoldMageChestUncooked
-ArmorGoldMageHelmetUncooked
-ArmorGoldMageLegsUncooked
-ArmorGoldMediumChestUncooked
-ArmorGoldMediumHelmetUncooked
-ArmorGoldMediumLegsUncooked
-ArmorHarvester1
-ArmorHarvester2
-ArmorIronChest
-ArmorIronLegs
-ArmorLeatherChest
-ArmorLeatherLegs
-ArmorLoxChest
-ArmorLoxLegs
-ArmorMageChest
-ArmorMageChest_Ashlands
-ArmorMageLegs
-ArmorMageLegs_Ashlands
-ArmorPaddedCuirass
-ArmorPaddedGreaves
-ArmorRagsChest
-ArmorRagsLegs
-ArmorRootChest
-ArmorRootLegs
-ArmorTrollLeatherChest
-ArmorTrollLeatherLegs
-ArmorTunic1
-ArmorTunic10
-ArmorTunic2
-ArmorTunic3
-ArmorTunic4
-ArmorTunic5
-ArmorTunic6
-ArmorTunic7
-ArmorTunic8
-ArmorTunic9
-ArmorWolfChest
-ArmorWolfLegs
-ArrowBloodGold
-ArrowBronze
-ArrowCarapace
-ArrowCharred
-ArrowFire
-ArrowFlint
-ArrowFrost
-ArrowIron
-ArrowNeedle
-ArrowObsidian
-ArrowPoison
-ArrowSilver
-ArrowWood
-AskBladder
-AskHide
-AsksvinCarrionNeck
-AsksvinCarrionPelvic
-AsksvinCarrionRibcage
-AsksvinCarrionSkull
-AsksvinEgg
-AsksvinMeat
-AtgeirBlackmetal
-AtgeirBronze
-AtgeirGold
-AtgeirGold_BloodLightning
-AtgeirGold_FrostFire
-AtgeirGoldUncooked
-AtgeirHimminAfl
-AtgeirIron
-AtgeirWood
-Axe1h_JotunWarrior
-Axe1h_JotunWarrior 1
-Axe2h_JotunWarrior
-AxeBerzerkr
-AxeBerzerkrBlood
-AxeBerzerkrLightning
-AxeBerzerkrNature
-AxeBlackMetal
-AxeBronze
-AxeEarly
-AxeFlint
-AxeGold
-AxeGold_BloodLightning
-AxeGold_FrostFire
-AxeGoldUncooked
-AxeHead1
-AxeHead2
-AxeIron
-AxeJotunBane
-AxeStone
-AxeWood
-BakedPoteitr
-BakedPoteitrUncooked
-BarberKit
-BarkaBranch
-Barley
-BarleyFlour
-BarleyWine
-BarleyWineBase
-BarrelRings
-bat_melee
-Battleaxe
-BattleaxeBlackmetal
-BattleaxeCrystal
-BattleaxeGold
-BattleaxeGold_BloodLightning
-BattleaxeGold_FrostFire
-BattleaxeGoldUncooked
-BattleaxeSkullSplittur
-BattleaxeWood
-BeechSeeds
-Bell
-BellFragment
-BeltStrength
-Bilebag
-BirchSeeds
-bjorn_bite
-bjorn_claws
-bjorn_swipe_combo
-bjorn_swipe_l
-bjorn_swipe_r
-BjornHide
-BjornMeat
-BjornPaw
-BlackCore
-BlackMarble
-BlackMetal
-BlackMetalScrap
-BlackSoup
-Blackwood
-BlobVial
-Bloodbag
-BloodGoldKey
-BloodPudding
-Blueberries
-BoarJerky
-BoltBlackmetal
-BoltBloodGold
-BoltBone
-BoltCarapace
-BoltCharred
-BoltIron
-BombBile
-BombBlob_Frost
-BombBlob_Lava
-BombBlob_Morkhalla
-BombBlob_Poison
-BombBlob_PoisonElite
-BombBlob_Tar
-BombDynamite
-BombLava
-BombOoze
-BombSiege
-BombSmoke
-BoneFragments
-BoneMawSerpentMeat
-BonemawSerpentScale
-BonemawSerpentTooth
-Bow
-BowAshlands
-BowAshlandsBlood
-BowAshlandsRoot
-BowAshlandsStorm
-BowDraugrFang
-BowFineWood
-BowGold
-BowGold_BloodLightning
-BowGold_FrostFire
-BowGoldUncooked
-BowHuntsman
-BowSpineSnap
-Bread
-BreadDough
-Bronze
-BronzeNails
-BronzeScrap
-BugMeat
-CandleWick
-CapeAsh
-CapeAsksvin
-CapeDeepNorth
-CapeDeepNorthMage
-CapeDeerHide
-CapeFeather
-CapeLinen
-CapeLox
-CapeOdin
-CapeTest
-CapeTrollHide
-CapeWolf
-Carapace
-Carrot
-CarrotSeeds
-CarrotSoup
-Catapult_ammo
-Catapult_Ammo_BloodGold
-CelestialFeather
-CeramicPlate
-Chain
-CharcoalResin
-charred_bow
-charred_bow_Fader
-charred_bow_volley
-charred_bow_volley_Fader
-Charred_Breastplate
-charred_dyrnwyn_greatsword_feint
-charred_dyrnwyn_greatsword_swing
-charred_dyrnwyn_greatsword_thrust
-charred_dyrnwyn_greatsword_thrustfeint
-charred_fader_greatsword_feint
-charred_fader_greatsword_swing
-charred_fader_greatsword_thrust
-charred_fader_greatsword_thrustfeint
-charred_greatsword_feint
-charred_greatsword_swing
-charred_greatsword_thrust
-charred_greatsword_thrustfeint
-Charred_Helmet
-Charred_HipCloth
-Charred_MageCloths
-charred_magestaff_fire
-charred_magestaff_summon
-charred_twitcher_scratch_l
-charred_twitcher_scratch_r
-charred_twitcher_throw
-CharredBone
-CharredCogwheel
-Charredskull
-chest_hildir1
-chest_hildir2
-chest_hildir3
-ChickenEgg
-ChickenMeat
-Chitin
-Cloudberry
-Club
-Coal
-Coins
-CookedAsksvinMeat
-CookedBjornMeat
-CookedBoneMawSerpentMeat
-CookedBugMeat
-CookedChickenMeat
-CookedDeerMeat
-CookedEgg
-CookedHareMeat
-CookedLoxMeat
-CookedMeat
-CookedMooseMeat
-CookedSealBlubber
-CookedVoltureMeat
-CookedWolfMeat
-Copper
-CopperOre
-CopperScrap
-CrossbowArbalest
-CrossbowGold
-CrossbowGold_BloodLightning
-CrossbowGold_FrostFire
-CrossbowGoldUncooked
-CrossbowRipper
-CrossbowRipperBlood
-CrossbowRipperLightning
-CrossbowRipperNature
-CrownJewel
-CryptKey
-Crystal
-Cultivator
-CuredSquirrelHamstring
-Dandelion
-Deathsquito_sting
-DeerHide
-DeerMeat
-DeerStew
-Demister
-DragonEgg
-DragonTear
-draugr_arrow
-draugr_axe
-draugr_bow
-draugr_sword
-DvergerArbalest
-DvergerArbalest_shoot
-DvergerArbalest_shootAshlands
-DvergerArbalest_shootDeepNorth
-DvergerHairFemale
-DvergerHairFemale_Redhair
-DvergerHairMale
-DvergerHairMale_Redbeard
-DvergerStaffFire
-DvergerStaffHeal
-DvergerStaffIce
-DvergerStaffSupport
-DvergerSuitArbalest
-DvergerSuitArbalest_Ashlands
-DvergerSuitFire
-DvergerSuitIce
-DvergerSuitSupport
-DvergrKey
-DvergrKeyFragment
-DvergrNeedle
-DyrnwynBladeFragment
-DyrnwynHiltFragment
-DyrnwynTipFragment
-Ectoplasm
-Eitr
-Elaking_AttackJump
-Elaking_AttackLantern
-ElakingHairBundle
-ElderBark
-Entrails
-Eyescream
-FaderDrop
-FaderEmber
-fallenvalkyrie_claws
-fallenvalkyrie_screech
-fallenvalkyrie_spin
-fallenvalkyrie_swoopattack
-fallenvalkyrie_taunt
-fallenvalkyrie_wingspin
-FeastAshlands
-FeastAshlands_Material
-FeastBlackforest
-FeastBlackforest_Material
-FeastDeepNorth
-FeastDeepNorth_Material
-Feaster
-FeastMeadows
-FeastMeadows_Material
-FeastMistlands
-FeastMistlands_Material
-FeastMountains
-FeastMountains_Material
-FeastOceans
-FeastOceans_Material
-FeastPlains
-FeastPlains_Material
-FeastSwamps
-FeastSwamps_Material
-Feathers
-Fiddleheadfern
-FierySvinstew
-FineWood
-FirCone
-FirConeFrost
-FireworksRocket_Blue
-FireworksRocket_Cyan
-FireworksRocket_Green
-FireworksRocket_Purple
-FireworksRocket_Red
-FireworksRocket_White
-FireworksRocket_Yellow
-Fish1
-Fish10
-Fish11
-Fish12
-Fish2
-Fish3
-Fish4_cave
-Fish5
-Fish6
-Fish7
-Fish8
-Fish9
-FishAndBread
-FishAndBreadUncooked
-FishAnglerRaw
-FishCooked
-FishingBait
-FishingBaitAshlands
-FishingBaitCave
-FishingBaitDeepNorth
-FishingBaitForest
-FishingBaitMistlands
-FishingBaitOcean
-FishingBaitPlains
-FishingBaitSwamp
-FishingRod
-FishRaw
-FishSoup
-FishWraps
-FistBjornClaw
-FistBjornUndeadClaw
-FistFenrirClaw
-FistGold
-FistGold_BloodLightning
-FistGold_FrostFire
-FistGoldUncooked
-Flametal
-FlametalNew
-FlametalOre
-FlametalOreNew
-Flax
-Flint
-FragrantBundle
-FreezeGland
-FreshSeaweed
-FrostCore
-Frostwood
-FrozenFuel
-FrozenKingDrop
-FW_ArmorBronzeChest
-FW_ArmorBronzeLegs
-FW_ArmorFenringChest
-FW_ArmorFenringLegs
-FW_ArmorMageChest
-FW_ArmorMageChest_Ashlands
-FW_ArmorMageLegs
-FW_ArmorMageLegs_Ashlands
-FW_ArmorPaddedCuirass
-FW_ArmorPaddedGreaves
-FW_ArmorTrollLeatherChest
-FW_ArmorTrollLeatherLegs
-FW_AxeBronze
-FW_BattleaxeCrystal
-FW_BowDraugrFang
-FW_CapeLinen
-FW_CapeTrollHide
-FW_CapeWolf
-FW_HelmetBronze
-FW_KnifeSilver
-FW_KnifeSkollAndHati
-FW_ShieldBlackmetalTower
-FW_StaffFireball
-FW_StaffLightning
-FW_SwordBlackmetal
-GemstoneBlue
-GemstoneGreen
-GemstoneRed
-GenericMoldUncooked
-GiantBloodSack
-GlowWorm
-GoblinArmband
-GoblinBrute_ArmGuard
-GoblinBrute_Attack
-GoblinBrute_Backbones
-GoblinBrute_ExecutionerCap
-GoblinBrute_HipCloth
-GoblinBrute_LegBones
-GoblinBrute_RageAttack
-GoblinBrute_ShoulderGuard
-GoblinBrute_Taunt
-GoblinBruteBros_Attack
-GoblinBruteBros_RageAttack
-GoblinClub
-GoblinClubDeepNorth
-GoblinHelmet
-GoblinLegband
-GoblinLoin
-GoblinShaman_attack_poke
-GoblinShaman_Headdress_antlers
-GoblinShaman_Headdress_feathers
-GoblinShaman_Staff_Bones
-GoblinShaman_Staff_Feathers
-GoblinShaman_Staff_Hildir
-GoblinShoulders
-GoblinSpear
-GoblinSpearDeepNorth
-GoblinSword
-GoblinSwordDeepNorth
-GoblinTorch
-GoblinTorchDeepNorth
-GoblinTotem
-Gold
-GoldOre
-GrapplingHook
-Grausten
-GreydwarfEye
-Guck
-Hammer
-HardAntler
-HareMeat
-HatefulBlood
-HealthUpgrade_Bonemass
-HealthUpgrade_GDKing
-HelmetAshlandsMediumHood
-HelmetBerserkerHood
-HelmetBerserkerUndead
-HelmetBronze
-HelmetCarapace
-HelmetCelebration
-HelmetCrownofValheim
-HelmetDNHeavy
-HelmetDNMage
-HelmetDNMediumHood
-HelmetDrake
-HelmetDverger
-HelmetFenring
-HelmetFishingHat
-HelmetFlametal
-HelmetHat1
-HelmetHat10
-HelmetHat2
-HelmetHat3
-HelmetHat4
-HelmetHat5
-HelmetHat6
-HelmetHat7
-HelmetHat8
-HelmetHat9
-HelmetIron
-HelmetLeather
-HelmetLox
-HelmetMage
-HelmetMage_Ashlands
-HelmetMidsummerCrown
-HelmetOdin
-HelmetPadded
-HelmetPointyHat
-HelmetRoot
-HelmetRootCrown
-HelmetStrawHat
-HelmetSweatBand
-HelmetTrollLeather
-HelmetYule
-HildirKey_forestcrypt
-HildirKey_mountaincave
-HildirKey_plainsfortress
-Hoe
-Honey
-HoneyGlazedChicken
-HoneyGlazedChickenUncooked
-Hook
-Ice
-IceShoes
-IceSkates
-Iron
-IronNails
-IronOre
-Ironpit
-IronScrap
-JotunHairFemale
-JotunHairMale
-JotunHairMale2
-JotunHairMale3
-JotunHairMale4
-JotunHairMale5
-JotunHairMale6
-JotunHairMale7
-JotunHairMale8
-JotunWarrior1HAxe_attack_cleave
-JotunWarrior1HAxe_attack_dodge
-JotunWarrior1HAxe_attack_dodger
-JotunWarrior1HAxe_attack_slash
-JotunWarrior1HAxe_attack_slashdw
-JotunWarrior2HAxe_attack_charge
-JotunWarrior2HAxe_attack_cleave
-JotunWarrior2HAxe_attack_dodge
-JotunWarrior2HAxe_attack_slash
-JotunWarrior2HSword_attack_charge
-JotunWarrior2HSword_attack_cleave
-JotunWarrior2HSword_attack_dodge
-JotunWarrior2HSword_attack_slash
-JotunWarrior_attack_charge
-JotunWarrior_attack_cleave
-JotunWarrior_attack_dodge
-JotunWarrior_attack_slash
-JotunWarrior_attack_sword
-JotunWarriorSword2h
-JotunWitch_attack_dodge
-JotunWitch_attack_dodge2
-JotunWitch_attack_dodge_down
-JotunWitch_attack_dodge_up
-JuteBlue
-JuteRed
-Kale
-KaleChips
-KaleChipsUncooked
-KaleSeeds
-KeysGoldUncooked
-KnifeBlackMetal
-KnifeButcher
-KnifeChitin
-KnifeCopper
-KnifeFlint
-KnifeGold
-KnifeGold_BloodLightning
-KnifeGold_FrostFire
-KnifeGoldUncooked
-KnifeSilver
-KnifeSkollAndHati
-KnifeVoid
-KnifeWood
-Lantern
-Lantern_DN
-Lantern_hooded
-Larva
-LastBossGate_RuneTile
-LeatherScraps
-Leatherstraps
-LinenThread
-Lingonberry
-Lingondricka
-LoxMeat
-LoxPelt
-LoxPie
-LoxPieUncooked
-MaceBronze
-MaceEldner
-MaceEldnerBlood
-MaceEldnerLightning
-MaceEldnerNature
-MaceGold
-MaceGold_BloodLightning
-MaceGold_FrostFire
-MaceGoldUncooked
-MaceIron
-MaceNeedle
-MaceSilver
-MaceWood
-MagicallyStuffedShroom
-MagicallyStuffedShroomUncooked
-Mandible
-MarinatedGreens
-MashedMeat
-MeadBaseBugRepellent
-MeadBaseBzerker
-MeadBaseEitrLingering
-MeadBaseEitrMinor
-MeadBaseFrostResist
-MeadBaseHasty
-MeadBaseHealthLingering
-MeadBaseHealthMajor
-MeadBaseHealthMedium
-MeadBaseHealthMinor
-MeadBaseLightFoot
-MeadBasePoisonResist
-MeadBaseStaminaLingering
-MeadBaseStaminaMedium
-MeadBaseStaminaMinor
-MeadBaseStrength
-MeadBaseSwimmer
-MeadBaseTamer
-MeadBaseTasty
-MeadBugRepellent
-MeadBzerker
-MeadEitrLingering
-MeadEitrMinor
-MeadFrostResist
-MeadHasty
-MeadHealthLingering
-MeadHealthMajor
-MeadHealthMedium
-MeadHealthMinor
-MeadLightfoot
-MeadPoisonResist
-MeadStaminaLingering
-MeadStaminaMedium
-MeadStaminaMinor
-MeadStrength
-MeadSwimmer
-MeadTamer
-MeadTasty
-MeadTrollPheromones
-MeatballsMashedPoteitr
-MeatPlatter
-MeatPlatterUncooked
-MechanicalSpring
-MemorialCoal
-MinceMeatSauce
-MisthareSupreme
-MisthareSupremeUncooked
-Mistile_kamikaze
-MoldArmorGoldChest
-MoldArmorGoldHelmet
-MoldArmorGoldLegs
-MoldArmorMageChest
-MoldArmorMageHelmet
-MoldArmorMageLegs
-MoldArmormediumChest
-MoldArmorMediumHelmet
-MoldArmorMediumLegs
-MoldAtgeir
-MoldAxe
-MoldAxe2H
-MoldBow
-MoldCrossbow
-MoldFistweapon
-MoldKeys
-MoldKnife
-MoldMace
-MoldMace2H
-MoldShieldBuckler
-MoldShieldRound
-MoldShieldTower
-MoldSmallParts
-MoldSpear
-MoldStafffrostorbs
-MoldStaffOrbofAhri
-MoldStaffspiritcaller
-MoldStaffthunderblood
-MoldSword
-MoldSword2H
-MoleClaws
-MoltenCore
-MooseHide
-MooseKebab
-MooseMeat
-MooseSinew
-MorgenHeart
-MorgenSinew
-Mushroom
-MushroomBlue
-MushroomBzerker
-MushroomJotunPuffs
-MushroomMagecap
-MushroomOmelette
-MushroomSmokePuff
-MushroomYellow
-NeckTail
-NeckTailGrilled
-Needle
-NornThread
-Oat
-OatFlour
-OatmealLingonberryJam
-OatMilk
-OatSeeds
-Obsidian
-Onion
-OnionSeeds
-OnionSoup
-Ooze
-OozeMork
-OrbFrostFire
-OrbThunderBlood
-OvenPancake
-OvenPancakeUncooked
-Pancakes
-PickaxeAntler
-PickaxeBlackMetal
-PickaxeBronze
-PickaxeIron
-PickaxeStone
-PineCone
-PiquantPie
-PiquantPieUncooked
-PlayerUnarmed
-Pot_Shard_Green
-Pot_Shard_Red
-Poteitr
-PoteitrSeeds
-PowderedDragonEgg
-ProustitePowder
-Pukeberries
-PulledBear
-PungentPebbles
-QueenBee
-QueenDrop
-QueensJam
-Raspberry
-RawMeat
-Resin
-RoastedCrustPie
-RoastedCrustPieUncooked
-Root
-RottenMeat
-RoundLog
-RoyalJelly
-Ruby
-SaddleAsksvin
-SaddleLox
-SaddleMoose
-Salad
-Sap
-Sausages
-ScaleHide
-ScorchingMedley
-Scythe
-ScytheHandle
-SealBlubber
-SealHide
-SealSoup
-SeekerAspic
-SeekerBrute_Taunt
-SeekerQueen_Call
-SeekerQueen_Teleport
-SerpentMeat
-SerpentMeatCooked
-SerpentScale
-SerpentStew
-SharpeningStone
-ShieldBanded
-ShieldBlackmetal
-ShieldBlackmetalTower
-ShieldBoneTower
-ShieldBronzeBuckler
-ShieldBucklerGoldUncooked
-ShieldCarapace
-ShieldCarapaceBuckler
-ShieldCore
-ShieldFlametal
-ShieldFlametalTower
-ShieldGold
-ShieldGoldBuckler
-ShieldGoldTower
-ShieldIronBuckler
-ShieldIronSquare
-ShieldIronTower
-ShieldKnight
-ShieldRoots
-ShieldRoundGoldUncooked
-ShieldSerpentscale
-ShieldSilver
-ShieldTowerGoldUncooked
-ShieldWood
-ShieldWoodTower
-ShocklateSmoothie
-Shovel
-Silver
-SilverNecklace
-SilverOre
-SizzlingBerryBroth
-skeleton_bow
-skeleton_bow2
-skeleton_bow_meadows
-skeleton_bow_mountains
-skeleton_bow_swamps
-skeleton_hildir_firenova
-skeleton_mace
-skeleton_mace_DeepNorth
-skeleton_sword
-skeleton_sword2
-skeleton_sword_hildir
-skeleton_sword_meadows
-skeleton_sword_mountains
-skeleton_sword_swamps
-SledgeCheat
-SledgeDemolisher
-SledgeGold
-SledgeGold_BloodLightning
-SledgeGold_FrostFire
-SledgeGoldUncooked
-SledgeIron
-SledgeStagbreaker
-SledgeWood
-SmallPartsGoldUncooked
-SmokedFish
-SmokedMooseMeat
-Snowball
-SnowballBig
-Softtissue
-SP_ArmorBronzeChest
-SP_ArmorBronzeLegs
-SP_ArmorDress1
-SP_ArmorFenringChest
-SP_ArmorFenringLegs
-SP_ArmorLeatherLegs
-SP_ArmorMageChest
-SP_ArmorMageChest_Ashlands
-SP_ArmorMageLegs
-SP_ArmorMageLegs_Ashlands
-SP_ArmorPaddedCuirass
-SP_ArmorPaddedGreaves
-SP_ArmorTrollLeatherChest
-SP_ArmorTrollLeatherLegs
-SP_ArmorTunic5
-SP_AxeBronze
-SP_BattleaxeCrystal
-SP_BowDraugrFang
-SP_CapeLinen
-SP_CapeTrollHide
-SP_CapeWolf
-SP_HelmetBronze
-SP_KnifeSilver
-SP_KnifeSkollAndHati
-SP_ShieldBlackmetalTower
-SP_StaffFireball
-SP_StaffLightning
-SP_SwordBlackmetal
-Sparkler
-SparklingShroomshake
-SpearBronze
-SpearCarapace
-SpearChitin
-SpearElderbark
-SpearFlint
-SpearGold
-SpearGold_BloodLightning
-SpearGold_FrostFire
-SpearGoldUncooked
-SpearSplitner
-SpearSplitner_Blood
-SpearSplitner_Lightning
-SpearSplitner_Nature
-SpearWolfFang
-SpearWood
-SpiceAshlands
-SpiceDeepNorth
-SpiceForests
-SpiceMistlands
-SpiceMountains
-SpiceOceans
-SpicePlains
-SpicyMarmalade
-spiritbjorn_bite
-spiritbjorn_claws
-spiritbjorn_swipe_combo
-spiritbjorn_swipe_l
-spiritbjorn_swipe_r
-staff_greenroots_tentaroot_attack
-StaffClusterbomb
-StaffFireball
-StaffFrostOrbs
-StaffFrostOrbsUncooked
-StaffGreenRoots
-StaffIceShards
-StaffLightning
-StaffOrbofAhri
-StaffOrbofAhriUncooked
-StaffRedTroll
-StaffShield
-StaffSkeleton
-StaffSpiritCaller
-StaffSpiritCallerUncooked
-StaffThunderBlood
-StaffThunderbloodUncooked
-StaminaUpgrade_Greydwarf
-StaminaUpgrade_Troll
-StaminaUpgrade_Wraith
-Stone
-stonegolem_attack1_spike
+Abomination_attack1 | Swing attack
+Abomination_attack2 | Slam attack
+Abomination_attack3 | Stub to the ground
+Acorn | Acorns
+Amber | Amber
+AmberPearl | Amber Pearl
+AncientCoin | Ancient Coin
+AncientGemstoneBlack | Draumyx
+AncientGemstoneGreen | Grimvarn
+AncientGemstoneOrange | Solryth
+AncientGemstonePurple | Veydris
+AncientSeed | Ancient Seed
+ArmorAshlandsMediumChest | Breastplate of Ask
+ArmorAshlandsMediumlegs | Trousers of Ask
+ArmorBerserkerChest | Patterns of the Bear
+ArmorBerserkerLegs | Loincloth of the Bear
+ArmorBerserkerUndeadChest | Vilebone Cage
+ArmorBerserkerUndeadLegs | Vilebone Drapes
+ArmorBronzeChest | Bronze Plate Tunic
+ArmorBronzeLegs | Bronze Plate Leggings
+ArmorCarapaceChest | Carapace Breastplate
+ArmorCarapaceLegs | Carapace Greaves
+ArmorDeepNorthHeavyChest | Breastplate of the Protector
+ArmorDeepNorthHeavylegs | Trousers of the Protector
+ArmorDeepNorthMageChest | Robes of the Caller
+ArmorDeepNorthMagelegs | Trousers of the Caller
+ArmorDeepNorthMediumChest | Chestpiece of the Vanguard
+ArmorDeepNorthMediumlegs | Trousers of the Vanguard
+ArmorDress1 | Plain Brown Dress
+ArmorDress10 | Simple Undyed Dress
+ArmorDress2 | Brown Dress with Shawl
+ArmorDress3 | Brown Dress with Beads
+ArmorDress4 | Plain Blue Dress
+ArmorDress5 | Blue Dress with Shawl
+ArmorDress6 | Blue Dress with Beads
+ArmorDress7 | Plain Yellow Dress
+ArmorDress8 | Yellow Dress with Shawl
+ArmorDress9 | Yellow Dress with Beads
+ArmorFenringChest | Fenris Coat
+ArmorFenringLegs | Fenris Leggings
+ArmorFlametalChest | Flametal Breastplate
+ArmorFlametalLegs | Flametal Greaves
+ArmorGoldHeavyChestUncooked | Cast: Breastplate of the Protector
+ArmorGoldHeavyHelmetUncooked | Cast: Helmet of the Protector
+ArmorGoldHeavyLegsUncooked | Cast: Trousers of the Protector
+ArmorGoldMageChestUncooked | Cast: Robes of the Caller
+ArmorGoldMageHelmetUncooked | Cast: Headdress of the Caller
+ArmorGoldMageLegsUncooked | Cast: Trousers of the Caller
+ArmorGoldMediumChestUncooked | Cast: Chestpiece of the Vanguard
+ArmorGoldMediumHelmetUncooked | Cast: Hood of the Vanguard
+ArmorGoldMediumLegsUncooked | Cast: Trousers of the Vanguard
+ArmorHarvester1 | Harvest Tunic
+ArmorHarvester2 | Harvest Dress
+ArmorIronChest | Iron Scale Mail
+ArmorIronLegs | Iron Greaves
+ArmorLeatherChest | Leather Tunic
+ArmorLeatherLegs | Leather Trousers
+ArmorLoxChest | Lox Fur Jacket
+ArmorLoxLegs | Lox Fur Trousers
+ArmorMageChest | Eitr-weave Robe
+ArmorMageChest_Ashlands | Robes of Embla
+ArmorMageLegs | Eitr-weave Trousers
+ArmorMageLegs_Ashlands | Trousers of Embla
+ArmorPaddedCuirass | Padded Cuirass
+ArmorPaddedGreaves | Padded Greaves
+ArmorRagsChest | Rag Tunic
+ArmorRagsLegs | Rag Trousers
+ArmorRootChest | Root Harnesk
+ArmorRootLegs | Root Leggings
+ArmorTrollLeatherChest | Troll Leather Tunic
+ArmorTrollLeatherLegs | Troll Leather Trousers
+ArmorTunic1 | Plain Blue Tunic
+ArmorTunic10 | Simple Undyed Tunic
+ArmorTunic2 | Blue Tunic with Cape
+ArmorTunic3 | Blue Tunic with Beads
+ArmorTunic4 | Plain Red Tunic
+ArmorTunic5 | Red Tunic with Cape
+ArmorTunic6 | Red Tunic with Beads
+ArmorTunic7 | Plain Yellow Tunic
+ArmorTunic8 | Yellow Tunic with Cape
+ArmorTunic9 | Yellow Tunic with Beads
+ArmorWolfChest | Wolf Hide Chestpiece
+ArmorWolfLegs | Wolf Hide Trousers
+ArrowBloodGold | Bloodgold Arrow
+ArrowBronze | Bronzehead Arrow
+ArrowCarapace | Carapace Arrow
+ArrowCharred | Charred Arrow
+ArrowFire | Fire Arrow
+ArrowFlint | Flinthead Arrow
+ArrowFrost | Frost Arrow
+ArrowIron | Ironhead Arrow
+ArrowNeedle | Needle Arrow
+ArrowObsidian | Obsidian Arrow
+ArrowPoison | Poison Arrow
+ArrowSilver | Silver Arrow
+ArrowWood | Wood Arrow
+AskBladder | Asksvin Bladder
+AskHide | Asksvin Hide
+AsksvinCarrionNeck | Asksvin Neck
+AsksvinCarrionPelvic | Asksvin Pelvis
+AsksvinCarrionRibcage | Asksvin Ribcage
+AsksvinCarrionSkull | Asksvin Skull
+AsksvinEgg | Asksvin Egg
+AsksvinMeat | Asksvin Tail
+AtgeirBlackmetal | Black Metal Atgeir
+AtgeirBronze | Bronze Atgeir
+AtgeirGold | Nord Atgeir
+AtgeirGold_BloodLightning | Thunderblood Atgeir
+AtgeirGold_FrostFire | Frostfire Atgeir
+AtgeirGoldUncooked | Cast: Nord Atgeir
+AtgeirHimminAfl | Himminafl
+AtgeirIron | Iron Atgeir
+AtgeirWood | Wooden Atgeir
+Axe1h_JotunWarrior | Club
+Axe1h_JotunWarrior 1 | Club
+Axe2h_JotunWarrior | Club
+AxeBerzerkr | Berserkir Axes
+AxeBerzerkrBlood | Bleeding Berserkir Axes
+AxeBerzerkrLightning | Thundering Berserkir Axes
+AxeBerzerkrNature | Primal Berserkir Axes
+AxeBlackMetal | Black Metal Axe
+AxeBronze | Bronze Axe
+AxeEarly | Early Axes
+AxeFlint | Flint Axe
+AxeGold | Nord Axe
+AxeGold_BloodLightning | Thunderblood Axe
+AxeGold_FrostFire | Frostfire Axe
+AxeGoldUncooked | Cast: Nord Axe
+AxeHead1 | Curious Axe Head
+AxeHead2 | Mysterious Axe Head
+AxeIron | Iron Axe
+AxeJotunBane | Jotun Bane
+AxeStone | Stone Axe
+AxeWood | Wooden Axe
+BakedPoteitr | Baked Poteitr
+BakedPoteitrUncooked | Unbaked Poteitr
+BarberKit | Barber Kit
+BarkaBranch | Frozen Branch
+Barley | Barley
+BarleyFlour | Barley Flour
+BarleyWine | Fire Resistance Barley Wine
+BarleyWineBase | Barley Wine Base: Fire Resistance
+BarrelRings | Barrel Hoops
+bat_melee | Bat melee
+Battleaxe | Battleaxe
+BattleaxeBlackmetal | Black Metal Battleaxe
+BattleaxeCrystal | Crystal Battleaxe
+BattleaxeGold | Nord Greataxe
+BattleaxeGold_BloodLightning | Thunderblood Greataxe
+BattleaxeGold_FrostFire | Frostfire Greataxe
+BattleaxeGoldUncooked | Cast: Nord Greataxe
+BattleaxeSkullSplittur | Skull Splittur
+BattleaxeWood | Wooden Battleaxe
+BeechSeeds | Beech Seeds
+Bell | Bell
+BellFragment | Bell Fragment
+BeltStrength | Megingjord
+Bilebag | Bilebag
+BirchSeeds | Birch Seeds
+bjorn_bite | bjorn bite
+bjorn_claws | bjorn bite
+bjorn_swipe_combo | bjorn bite
+bjorn_swipe_l | bjorn bite
+bjorn_swipe_r | bjorn bite
+BjornHide | Bear Hide
+BjornMeat | Bear Meat
+BjornPaw | Bear Paw
+BlackCore | Black Core
+BlackMarble | Black Marble
+BlackMetal | Black Metal
+BlackMetalScrap | Black Metal Scrap
+BlackSoup | Black Soup
+Blackwood | Ashwood
+BlobVial | Corked Vial
+Bloodbag | Bloodbag
+BloodGoldKey | Intricate Key
+BloodPudding | Blood Pudding
+Blueberries | Blueberries
+BoarJerky | Boar Jerky
+BoltBlackmetal | Black Metal Bolt
+BoltBloodGold | Bloodgold Bolt
+BoltBone | Bone Bolt
+BoltCarapace | Carapace Bolt
+BoltCharred | Charred Bolt
+BoltIron | Iron Bolt
+BombBile | Bile Bomb
+BombBlob_Frost | Blob Bomb: Frost
+BombBlob_Lava | Blob Bomb: Lava
+BombBlob_Morkhalla | Blob Bomb: Pulp
+BombBlob_Poison | Blob Bomb: Poison
+BombBlob_PoisonElite | Blob Bomb: Elite Poison
+BombBlob_Tar | Blob Bomb: Tar
+BombDynamite | Ember Charge
+BombLava | Basalt Bomb
+BombOoze | Ooze Bomb
+BombSiege | Explosive Payload
+BombSmoke | Smoke Bomb
+BoneFragments | Bone Fragments
+BoneMawSerpentMeat | Bonemaw Meat
+BonemawSerpentScale | Bonemaw Scale
+BonemawSerpentTooth | Bonemaw Tooth
+Bow | Crude Bow
+BowAshlands | Ash Fang
+BowAshlandsBlood | Blood Fang
+BowAshlandsRoot | Root Fang
+BowAshlandsStorm | Storm Fang
+BowDraugrFang | Draugr Fang
+BowFineWood | Finewood Bow
+BowGold | Nord Bow
+BowGold_BloodLightning | Thunderblood Bow
+BowGold_FrostFire | Frostfire Bow
+BowGoldUncooked | Cast: Nord Bow
+BowHuntsman | Huntsman Bow
+BowSpineSnap | Spinesnap
+Bread | Bread
+BreadDough | Bread Dough
+Bronze | Bronze
+BronzeNails | Bronze Nails
+BronzeScrap | Scrap Bronze
+BugMeat | Seeker Meat
+CandleWick | Candle Wick
+CapeAsh | Ashen Cape
+CapeAsksvin | Asksvin Cloak
+CapeDeepNorth | Moose Hide Cape
+CapeDeepNorthMage | Cape of the Caller
+CapeDeerHide | Deer Hide Cape
+CapeFeather | Feather Cape
+CapeLinen | Linen Cape
+CapeLox | Lox Cape
+CapeOdin | Cape of Oden
+CapeTest | CAPE TEST
+CapeTrollHide | Troll Hide Cape
+CapeWolf | Wolf Fur Cape
+Carapace | Carapace
+Carrot | Carrot
+CarrotSeeds | Carrot Seeds
+CarrotSoup | Carrot Soup
+Catapult_ammo | Grausten Payload
+Catapult_Ammo_BloodGold | Bloodgold Payload
+CelestialFeather | Celestial Feather
+CeramicPlate | Ceramic Plate
+Chain | Chain
+CharcoalResin | Charcoal Resin
+charred_bow | Bow
+charred_bow_Fader | Bow
+charred_bow_volley | Bow
+charred_bow_volley_Fader | Bow
+Charred_Breastplate | Iron plate armor
+charred_dyrnwyn_greatsword_feint | Charred Sword
+charred_dyrnwyn_greatsword_swing | Charred Sword
+charred_dyrnwyn_greatsword_thrust | Charred Sword
+charred_dyrnwyn_greatsword_thrustfeint | Charred Sword
+charred_fader_greatsword_feint | Charred Sword
+charred_fader_greatsword_swing | Charred Sword
+charred_fader_greatsword_thrust | Charred Sword
+charred_fader_greatsword_thrustfeint | Charred Sword
+charred_greatsword_feint | Charred Sword
+charred_greatsword_swing | Charred Sword
+charred_greatsword_thrust | Charred Sword
+charred_greatsword_thrustfeint | Charred Sword
+Charred_Helmet | Iron plate armor
+Charred_HipCloth | Iron plate armor
+Charred_MageCloths | Iron plate armor
+charred_magestaff_fire | Bow
+charred_magestaff_summon | Bow
+charred_twitcher_scratch_l | Charred Sword
+charred_twitcher_scratch_r | Charred Sword
+charred_twitcher_throw | Bow
+CharredBone | Charred Bone
+CharredCogwheel | Charred Cogwheel
+Charredskull | Charred Skull
+chest_hildir1 | Hildir's Brass Chest
+chest_hildir2 | Hildir's Silver Chest
+chest_hildir3 | Hildir's Bronze Chest
+ChickenEgg | Egg
+ChickenMeat | Chicken Meat
+Chitin | Chitin
+Cloudberry | Cloudberries
+Club | Club
+Coal | Coal
+Coins | Coins
+CookedAsksvinMeat | Cooked Asksvin Tail
+CookedBjornMeat | Cooked Bear Meat
+CookedBoneMawSerpentMeat | Cooked Bonemaw Meat
+CookedBugMeat | Cooked Seeker Meat
+CookedChickenMeat | Cooked Chicken Meat
+CookedDeerMeat | Cooked Deer Meat
+CookedEgg | Cooked Egg
+CookedHareMeat | Cooked Hare Meat
+CookedLoxMeat | Cooked Lox Meat
+CookedMeat | Cooked Boar Meat
+CookedMooseMeat | Cooked Moose Meat
+CookedSealBlubber | Cooked Seal Blubber
+CookedVoltureMeat | Cooked Volture Meat
+CookedWolfMeat | Cooked Wolf Meat
+Copper | Copper
+CopperOre | Copper Ore
+CopperScrap | Copper Scrap
+CrossbowArbalest | Arbalest
+CrossbowGold | Nord Crossbow
+CrossbowGold_BloodLightning | Thunderblood Crossbow
+CrossbowGold_FrostFire | Frostfire Crossbow
+CrossbowGoldUncooked | Cast: Nord Crossbow
+CrossbowRipper | Ripper
+CrossbowRipperBlood | Wound Ripper
+CrossbowRipperLightning | Storm Ripper
+CrossbowRipperNature | Root Ripper
+CrownJewel | Crown Jewel
+CryptKey | Swamp Key
+Crystal | Crystal
+Cultivator | Cultivator
+CuredSquirrelHamstring | Cured Squirrel Hamstring
+Dandelion | Dandelion
+Deathsquito_sting | Wraith melee
+DeerHide | Deer Hide
+DeerMeat | Deer Meat
+DeerStew | Deer Stew
+Demister | Wisplight
+DragonEgg | Dragon Egg
+DragonTear | Dragon Tear
+draugr_arrow | Ironhead arrow
+draugr_axe | Dragur axe
+draugr_bow | Bow
+draugr_sword | Dragur axe
+DvergerArbalest | Arbalest
+DvergerArbalest_shoot | Arbalest
+DvergerArbalest_shootAshlands | Arbalest
+DvergerArbalest_shootDeepNorth | Arbalest
+DvergerHairFemale | Iron plate armor
+DvergerHairFemale_Redhair | Iron plate armor
+DvergerHairMale | Iron plate armor
+DvergerHairMale_Redbeard | Iron plate armor
+DvergerStaffFire | Club
+DvergerStaffHeal | Club
+DvergerStaffIce | Club
+DvergerStaffSupport | Club
+DvergerSuitArbalest | Iron plate armor
+DvergerSuitArbalest_Ashlands | Iron plate armor
+DvergerSuitFire | Iron plate armor
+DvergerSuitIce | Iron plate armor
+DvergerSuitSupport | Iron plate armor
+DvergrKey | Sealbreaker
+DvergrKeyFragment | Sealbreaker Fragment
+DvergrNeedle | Dvergr Extractor
+DyrnwynBladeFragment | Dyrnwyn Blade Fragment
+DyrnwynHiltFragment | Dyrnwyn Hilt Fragment
+DyrnwynTipFragment | Dyrnwyn Tip Fragment
+Ectoplasm | Ectoplasm
+Eitr | Refined Eitr
+Elaking_AttackJump | Charred Sword
+Elaking_AttackLantern | Torch
+ElakingHairBundle | Elaking Hair Bundle
+ElderBark | Ancient Bark
+Entrails | Entrails
+Eyescream | Eyescream
+FaderDrop | Fader Relic
+FaderEmber | Embers
+fallenvalkyrie_claws | Fallen Valkyrie Claws
+fallenvalkyrie_screech | Fallen Valkyrie Claws
+fallenvalkyrie_spin | Fallen Valkyrie Aoe Spin
+fallenvalkyrie_swoopattack | Fallen Valkyrie swooping
+fallenvalkyrie_taunt | Fallen Valkyrie Claws
+fallenvalkyrie_wingspin | Fallen Valkyrie Wingspin
+FeastAshlands | Ashlands Gourmet Bowl
+FeastAshlands_Material | Ashlands Gourmet Bowl
+FeastBlackforest | Black Forest Buffet Platter
+FeastBlackforest_Material | Black Forest Buffet Platter
+FeastDeepNorth | Northern Morning Fare
+FeastDeepNorth_Material | Northern Morning Fare
+Feaster | Serving Tray
+FeastMeadows | Whole Roasted Meadow Boar
+FeastMeadows_Material | Whole Roasted Meadow Boar
+FeastMistlands | Mushrooms Galore  la Mistlands
+FeastMistlands_Material | Mushrooms Galore  la Mistlands
+FeastMountains | Hearty Mountain Logger's Stew
+FeastMountains_Material | Hearty Mountain Logger's Stew
+FeastOceans | Sailor's Bounty
+FeastOceans_Material | Sailor's Bounty
+FeastPlains | Plains Pie Picnic
+FeastPlains_Material | Plains Pie Picnic
+FeastSwamps | Swamp Dweller's Delight
+FeastSwamps_Material | Swamp Dweller's Delight
+Feathers | Feathers
+Fiddleheadfern | Fiddlehead
+FierySvinstew | Fiery Svinstew
+FineWood | Finewood
+FirCone | Fir Cone
+FirConeFrost | Timberwood Cone
+FireworksRocket_Blue | Blue Fireworks
+FireworksRocket_Cyan | Cyan Fireworks
+FireworksRocket_Green | Green Fireworks
+FireworksRocket_Purple | Purple Fireworks
+FireworksRocket_Red | Red Fireworks
+FireworksRocket_White | Basic Fireworks
+FireworksRocket_Yellow | Yellow Fireworks
+Fish1 | Perch
+Fish10 | Northern Salmon
+Fish11 | Magmafish
+Fish12 | Pufferfish
+Fish2 | Pike
+Fish3 | Tuna
+Fish4_cave | Tetra
+Fish5 | Trollfish
+Fish6 | Giant Herring
+Fish7 | Grouper
+Fish8 | Coral Cod
+Fish9 | Anglerfish
+FishAndBread | Fish 'n' Bread
+FishAndBreadUncooked | Uncooked Fish 'n' Bread
+FishAnglerRaw | Raw Fish
+FishCooked | Cooked Fish
+FishingBait | Fishing Bait
+FishingBaitAshlands | Hot Fishing Bait
+FishingBaitCave | Cold Fishing Bait
+FishingBaitDeepNorth | Frosty Fishing Bait
+FishingBaitForest | Mossy Fishing Bait
+FishingBaitMistlands | Misty Fishing Bait
+FishingBaitOcean | Heavy Fishing Bait
+FishingBaitPlains | Stingy Fishing Bait
+FishingBaitSwamp | Sticky Fishing Bait
+FishingRod | Fishing Rod
+FishRaw | Raw Fish
+FishSoup | Fish Soup
+FishWraps | Fish Wraps
+FistBjornClaw | Paws of the Bear
+FistBjornUndeadClaw | Vilebone Maulclaws
+FistFenrirClaw | Flesh Rippers
+FistGold | Nord Knucklechains
+FistGold_BloodLightning | Thunderblood Knucklechains
+FistGold_FrostFire | Frostfire Knucklechains
+FistGoldUncooked | Cast: Nord Knucklechains
+Flametal | Ancient Metal
+FlametalNew | Flametal
+FlametalOre | Glowing Metal Ore
+FlametalOreNew | Flametal Ore
+Flax | Flax
+Flint | Flint
+FragrantBundle | Fragrant Bundle
+FreezeGland | Freeze Gland
+FreshSeaweed | Fresh Seaweed
+FrostCore | Frostcore
+Frostwood | Timberwood
+FrozenFuel | Liquid Frost
+FrozenKingDrop | Sacrificial Blood
+FW_ArmorBronzeChest | Bronze Plate Tunic
+FW_ArmorBronzeLegs | Bronze Plate Leggings
+FW_ArmorFenringChest | Fenris Coat
+FW_ArmorFenringLegs | Fenris Leggings
+FW_ArmorMageChest | Eitr-weave Robe
+FW_ArmorMageChest_Ashlands | Robes of Embla
+FW_ArmorMageLegs | Eitr-weave Trousers
+FW_ArmorMageLegs_Ashlands | Trousers of Embla
+FW_ArmorPaddedCuirass | Padded Cuirass
+FW_ArmorPaddedGreaves | Padded Greaves
+FW_ArmorTrollLeatherChest | Troll Leather Tunic
+FW_ArmorTrollLeatherLegs | Troll Leather Trousers
+FW_AxeBronze | Bronze Axe
+FW_BattleaxeCrystal | Crystal Battleaxe
+FW_BowDraugrFang | Draugr Fang
+FW_CapeLinen | Linen Cape
+FW_CapeTrollHide | Troll Hide Cape
+FW_CapeWolf | Wolf Fur Cape
+FW_HelmetBronze | Bronze Helmet
+FW_KnifeSilver | Silver Knife
+FW_KnifeSkollAndHati | Skoll and Hati
+FW_ShieldBlackmetalTower | Black Metal Tower Shield
+FW_StaffFireball | Staff of Embers
+FW_StaffLightning | Dundr
+FW_SwordBlackmetal | Black Metal Sword
+GemstoneBlue | Iolite
+GemstoneGreen | Jade
+GemstoneRed | Bloodstone
+GenericMoldUncooked | [item_smallparts_gold_uncooked]
+GiantBloodSack | Blood Clot
+GlowWorm | Luminous Larva
+GoblinArmband | Iron plate armor
+GoblinBrute_ArmGuard | Iron plate armor
+GoblinBrute_Attack | Brute sword
+GoblinBrute_Backbones | Iron plate armor
+GoblinBrute_ExecutionerCap | Iron plate armor
+GoblinBrute_HipCloth | Iron plate armor
+GoblinBrute_LegBones | Iron plate armor
+GoblinBrute_RageAttack | Brute sword
+GoblinBrute_ShoulderGuard | Iron plate armor
+GoblinBrute_Taunt | Brute taunt
+GoblinBruteBros_Attack | Brute sword
+GoblinBruteBros_RageAttack | Brute sword
+GoblinClub | Club
+GoblinClubDeepNorth | Club
+GoblinHelmet | Iron plate armor
+GoblinLegband | Iron plate armor
+GoblinLoin | Iron plate armor
+GoblinShaman_attack_poke | Club
+GoblinShaman_Headdress_antlers | Club
+GoblinShaman_Headdress_feathers | Club
+GoblinShaman_Staff_Bones | Club
+GoblinShaman_Staff_Feathers | Club
+GoblinShaman_Staff_Hildir | Club
+GoblinShoulders | Iron plate armor
+GoblinSpear | Flint spear
+GoblinSpearDeepNorth | Flint spear
+GoblinSword | Bronze sword
+GoblinSwordDeepNorth | Bronze sword
+GoblinTorch | Torch
+GoblinTorchDeepNorth | Torch
+GoblinTotem | Fuling Totem
+Gold | Bloodgold
+GoldOre | Petrified Tissue
+GrapplingHook | Grappling Hook
+Grausten | Grausten
+GreydwarfEye | Greydwarf Eye
+Guck | Guck
+Hammer | Hammer
+HardAntler | Hard Antler
+HareMeat | Hare Meat
+HatefulBlood | Malicious Blood
+HealthUpgrade_Bonemass | Bonemass heart
+HealthUpgrade_GDKing | Elder heart
+HelmetAshlandsMediumHood | Hood of Ask
+HelmetBerserkerHood | Headdress of the Bear
+HelmetBerserkerUndead | Vilebone Visage
+HelmetBronze | Bronze Helmet
+HelmetCarapace | Carapace Helmet
+HelmetCelebration | Celebratory Cap
+HelmetCrownofValheim | Crown of Valheim
+HelmetDNHeavy | Helmet of the Protector
+HelmetDNMage | Headdress of the Caller
+HelmetDNMediumHood | Hood of the Vanguard
+HelmetDrake | Drake Helmet
+HelmetDverger | Dverger Circlet
+HelmetFenring | Fenris Hood
+HelmetFishingHat | Fishing Hat
+HelmetFlametal | Flametal Helmet
+HelmetHat1 | Blue Tied Headscarf
+HelmetHat10 | Simple Purple Cap
+HelmetHat2 | Green Twisted Headscarf
+HelmetHat3 | Brown Fur Cap
+HelmetHat4 | Extravagant Green Cap
+HelmetHat5 | Simple Red Cap
+HelmetHat6 | Yellow Tied Headscarf
+HelmetHat7 | Red Twisted Headscarf
+HelmetHat8 | Grey Fur Cap
+HelmetHat9 | Extravagant Orange Cap
+HelmetIron | Iron Helmet
+HelmetLeather | Leather Helmet
+HelmetLox | Lox Fur Hood
+HelmetMage | Eitr-weave Hood
+HelmetMage_Ashlands | Hood of Embla
+HelmetMidsummerCrown | Midsummer Crown
+HelmetOdin | Hood of Oden
+HelmetPadded | Padded Helmet
+HelmetPointyHat | Pointy Hat
+HelmetRoot | Root Mask
+HelmetRootCrown | Crown of Roots
+HelmetStrawHat | Straw Hat
+HelmetSweatBand | Headband
+HelmetTrollLeather | Troll Leather Hood
+HelmetYule | Yule Hat
+HildirKey_forestcrypt | Hildir's Brass Key
+HildirKey_mountaincave | Hildir's Silver Key
+HildirKey_plainsfortress | Hildir's Bronze Key
+Hoe | Hoe
+Honey | Honey
+HoneyGlazedChicken | Honey Glazed Chicken
+HoneyGlazedChickenUncooked | Uncooked Honey Glazed Chicken
+Hook | Hook
+Ice | Ice
+IceShoes | [item_iceshoes]
+IceSkates | [item_iceskates]
+Iron | Iron
+IronNails | Iron Nails
+IronOre | Iron Ore
+Ironpit | Iron Pit
+IronScrap | Scrap Iron
+JotunHairFemale | Iron plate armor
+JotunHairMale | Iron plate armor
+JotunHairMale2 | Iron plate armor
+JotunHairMale3 | Iron plate armor
+JotunHairMale4 | Iron plate armor
+JotunHairMale5 | Iron plate armor
+JotunHairMale6 | Iron plate armor
+JotunHairMale7 | Iron plate armor
+JotunHairMale8 | Iron plate armor
+JotunWarrior1HAxe_attack_cleave | Charred Sword
+JotunWarrior1HAxe_attack_dodge | Charred Sword
+JotunWarrior1HAxe_attack_dodger | Charred Sword
+JotunWarrior1HAxe_attack_slash | Charred Sword
+JotunWarrior1HAxe_attack_slashdw | Charred Sword
+JotunWarrior2HAxe_attack_charge | Charred Sword
+JotunWarrior2HAxe_attack_cleave | Charred Sword
+JotunWarrior2HAxe_attack_dodge | Charred Sword
+JotunWarrior2HAxe_attack_slash | Charred Sword
+JotunWarrior2HSword_attack_charge | Charred Sword
+JotunWarrior2HSword_attack_cleave | Charred Sword
+JotunWarrior2HSword_attack_dodge | Charred Sword
+JotunWarrior2HSword_attack_slash | Charred Sword
+JotunWarrior_attack_charge | Charred Sword
+JotunWarrior_attack_cleave | Charred Sword
+JotunWarrior_attack_dodge | Charred Sword
+JotunWarrior_attack_slash | Charred Sword
+JotunWarrior_attack_sword | Charred Sword
+JotunWarriorSword2h | Club
+JotunWitch_attack_dodge | Charred Sword
+JotunWitch_attack_dodge2 | Charred Sword
+JotunWitch_attack_dodge_down | Charred Sword
+JotunWitch_attack_dodge_up | Charred Sword
+JuteBlue | Blue Jute
+JuteRed | Red Jute
+Kale | Kale
+KaleChips | Kale Chips
+KaleChipsUncooked | Raw Kale Chips
+KaleSeeds | Kale Seeds
+KeysGoldUncooked | Cast: Intricate Key
+KnifeBlackMetal | Black Metal Knife
+KnifeButcher | Butcher Knife
+KnifeChitin | Abyssal Razor
+KnifeCopper | Copper Knife
+KnifeFlint | Flint Knife
+KnifeGold | Nord Dagger
+KnifeGold_BloodLightning | Thunderblood Dagger
+KnifeGold_FrostFire | Frostfire Dagger
+KnifeGoldUncooked | Cast: Nord Dagger
+KnifeSilver | Silver Knife
+KnifeSkollAndHati | Skoll and Hati
+KnifeVoid | Voidcaller
+KnifeWood | Wooden Knife
+Lantern | Dvergr Lantern
+Lantern_DN | Salvaged Lantern
+Lantern_hooded | Hooded Lantern
+Larva | [item_larva]
+LastBossGate_RuneTile | [item_runetile]
+LeatherScraps | Leather Scraps
+Leatherstraps | Leather Straps
+LinenThread | Linen Thread
+Lingonberry | Lingonberries
+Lingondricka | Lingonberry Juice
+LoxMeat | Lox Meat
+LoxPelt | Lox Pelt
+LoxPie | Lox Meat Pie
+LoxPieUncooked | Unbaked Lox Pie
+MaceBronze | Bronze Mace
+MaceEldner | Flametal Mace
+MaceEldnerBlood | Bloodgeon
+MaceEldnerLightning | Storm Star
+MaceEldnerNature | Klossen
+MaceGold | Nord Mace
+MaceGold_BloodLightning | Thunderblood Mace
+MaceGold_FrostFire | Frostfire Mace
+MaceGoldUncooked | Cast: Nord Mace
+MaceIron | Iron Mace
+MaceNeedle | Porcupine
+MaceSilver | Frostner
+MaceWood | Wooden Mace
+MagicallyStuffedShroom | Stuffed Mushroom
+MagicallyStuffedShroomUncooked | Uncooked Stuffed Mushroom
+Mandible | Mandible
+MarinatedGreens | Marinated Greens
+MashedMeat | Mashed Meat
+MeadBaseBugRepellent | Mead Base: Anti-Sting
+MeadBaseBzerker | Mead base: Berserkir
+MeadBaseEitrLingering | Mead Base: Lingering Eitr
+MeadBaseEitrMinor | Mead Base: Minor Eitr
+MeadBaseFrostResist | Mead Base: Frost Resistance
+MeadBaseHasty | Mead base: Ratatosk
+MeadBaseHealthLingering | Mead Base: Lingering Health
+MeadBaseHealthMajor | Mead Base: Major Healing
+MeadBaseHealthMedium | Mead Base: Medium Healing
+MeadBaseHealthMinor | Mead Base: Minor Healing
+MeadBaseLightFoot | Mead Base: Lightfoot
+MeadBasePoisonResist | Mead Base: Poison Resistance
+MeadBaseStaminaLingering | Mead Base: Lingering Stamina
+MeadBaseStaminaMedium | Mead Base: Medium Stamina
+MeadBaseStaminaMinor | Mead Base: Minor Stamina
+MeadBaseStrength | Mead Base: Troll Endurance
+MeadBaseSwimmer | Mead Base: Vananidir
+MeadBaseTamer | Mead Base: Animal Whispers
+MeadBaseTasty | Mead Base: Tasty
+MeadBugRepellent | Anti-Sting Concoction
+MeadBzerker | Berserkir Mead
+MeadEitrLingering | Lingering Eitr Mead
+MeadEitrMinor | Minor Eitr Mead
+MeadFrostResist | Frost Resistance Mead
+MeadHasty | Tonic of Ratatosk
+MeadHealthLingering | Lingering Healing Mead
+MeadHealthMajor | Major Healing Mead
+MeadHealthMedium | Medium Healing Mead
+MeadHealthMinor | Minor Healing Mead
+MeadLightfoot | Lightfoot Mead
+MeadPoisonResist | Poison Resistance Mead
+MeadStaminaLingering | Lingering Stamina Mead
+MeadStaminaMedium | Medium Stamina Mead
+MeadStaminaMinor | Minor Stamina Mead
+MeadStrength | Mead of Troll Endurance
+MeadSwimmer | Draught of Vananidir
+MeadTamer | Brew of Animal Whispers
+MeadTasty | Tasty Mead
+MeadTrollPheromones | Love Potion
+MeatballsMashedPoteitr | Meatballs and Poteitr
+MeatPlatter | Meat Platter
+MeatPlatterUncooked | Uncooked Meat Platter
+MechanicalSpring | Mechanical Spring
+MemorialCoal | Memorial Coal
+MinceMeatSauce | Minced Meat Sauce
+MisthareSupreme | Misthare Supreme
+MisthareSupremeUncooked | Uncooked Misthare Supreme
+Mistile_kamikaze | Mistile Kamikaze
+MoldArmorGoldChest | Mould: Breastplate of the Protector
+MoldArmorGoldHelmet | Mould: Helmet of the Protector
+MoldArmorGoldLegs | Mould: Trousers of the Protector
+MoldArmorMageChest | Mould: Robes of the Caller
+MoldArmorMageHelmet | Mould: Headdress of the Caller
+MoldArmorMageLegs | Mould: Trousers of the Caller
+MoldArmormediumChest | Mould: Chestpiece of the Vanguard
+MoldArmorMediumHelmet | Mould: Hood of the Vanguard
+MoldArmorMediumLegs | Mould: Trousers of the Vanguard
+MoldAtgeir | Mould: Nord Atgeir
+MoldAxe | Mould: Nord Axe
+MoldAxe2H | Mould: Nord Greataxe
+MoldBow | Mould: Nord Bow
+MoldCrossbow | Mould: Nord Crossbow
+MoldFistweapon | Mould: Nord Knucklechains
+MoldKeys | Mould: Intricate Key
+MoldKnife | Mould: Nord Dagger
+MoldMace | Mould: Nord Mace
+MoldMace2H | Mould: Nord Sledge
+MoldShieldBuckler | Mould: Nord Buckler
+MoldShieldRound | Mould: Nord Shield
+MoldShieldTower | Mould: Nord Greatshield
+MoldSmallParts | [item_mold_smallparts]
+MoldSpear | Mould: Nord Spear
+MoldStafffrostorbs | Mould: Northern Vengeance
+MoldStaffOrbofAhri | Mould: Echo Spike
+MoldStaffspiritcaller | Mould: Spirit Caller
+MoldStaffthunderblood | Mould: Lightning Strike
+MoldSword | Mould: Nord Sword
+MoldSword2H | Mould: Nord Greatsword
+MoleClaws | Long Claws
+MoltenCore | Molten Core
+MooseHide | Moose Hide
+MooseKebab | Meat In Bread
+MooseMeat | Moose Meat
+MooseSinew | Moose Sinew
+MorgenHeart | Morgen Heart
+MorgenSinew | Morgen Sinew
+Mushroom | Mushroom
+MushroomBlue | Blue Mushroom
+MushroomBzerker | Toadstool
+MushroomJotunPuffs | Jotun Puffs
+MushroomMagecap | Magecap
+MushroomOmelette | Mushroom Omelette
+MushroomSmokePuff | Smoke Puff
+MushroomYellow | Yellow Mushroom
+NeckTail | Neck Tail
+NeckTailGrilled | Grilled Neck Tail
+Needle | Needle
+NornThread | Nornathread
+Oat | Oats
+OatFlour | Oat Flour
+OatmealLingonberryJam | Oatmeal
+OatMilk | Oat Milk
+OatSeeds | Oat Seeds
+Obsidian | Obsidian
+Onion | Onion
+OnionSeeds | Onion Seeds
+OnionSoup | Onion Soup
+Ooze | Ooze
+OozeMork | Dead Pulp
+OrbFrostFire | Frostfire Essence
+OrbThunderBlood | Thunderblood Essence
+OvenPancake | Oven Pancake
+OvenPancakeUncooked | Oven Pancake Batter
+Pancakes | Pancakes
+PickaxeAntler | Antler Pickaxe
+PickaxeBlackMetal | Black Metal Pickaxe
+PickaxeBronze | Bronze Pickaxe
+PickaxeIron | Iron Pickaxe
+PickaxeStone | Stone Pickaxe
+PineCone | Pine Cone
+PiquantPie | Piquant Pie
+PiquantPieUncooked | Uncooked Piquant Pie
+PlayerUnarmed | Unarmed
+Pot_Shard_Green | Pot Shard
+Pot_Shard_Red | [item_pot_shard_red]
+Poteitr | Poteitr
+PoteitrSeeds | Seed Poteitr
+PowderedDragonEgg | Powdered Dragon Eggshells
+ProustitePowder | Proustite Powder
+Pukeberries | Bukeperries
+PulledBear | Pulled Bear
+PungentPebbles | Pungent Pebbles
+QueenBee | Queen Bee
+QueenDrop | Majestic Carapace
+QueensJam | Queen's Jam
+Raspberry | Raspberries
+RawMeat | Boar Meat
+Resin | Resin
+RoastedCrustPie | Roasted Crust Pie
+RoastedCrustPieUncooked | Uncooked Roasted Crust Pie
+Root | Root
+RottenMeat | Rotten Meat
+RoundLog | Corewood
+RoyalJelly | Royal Jelly
+Ruby | Ruby
+SaddleAsksvin | Asksvin Saddle
+SaddleLox | Lox Saddle
+SaddleMoose | Moose Saddle
+Salad | Salad
+Sap | Sap
+Sausages | Sausages
+ScaleHide | Scale Hide
+ScorchingMedley | Scorching Medley
+Scythe | Scythe
+ScytheHandle | Scythe Handle
+SealBlubber | Seal Blubber
+SealHide | Seal Pelt
+SealSoup | Seal Meat Soup
+SeekerAspic | Seeker Aspic
+SeekerBrute_Taunt | Brute taunt
+SeekerQueen_Call | Brute taunt
+SeekerQueen_Teleport | Brute taunt
+SerpentMeat | Serpent Meat
+SerpentMeatCooked | Cooked Serpent Meat
+SerpentScale | Serpent Scale
+SerpentStew | Serpent Stew
+SharpeningStone | Sharpening Stone
+ShieldBanded | Banded Shield
+ShieldBlackmetal | Black Metal Shield
+ShieldBlackmetalTower | Black Metal Tower Shield
+ShieldBoneTower | Bone Tower Shield
+ShieldBronzeBuckler | Bronze Buckler
+ShieldBucklerGoldUncooked | Cast: Nord Buckler
+ShieldCarapace | Carapace Shield
+ShieldCarapaceBuckler | Carapace Buckler
+ShieldCore | Shield Core
+ShieldFlametal | Flametal Shield
+ShieldFlametalTower | Flametal Tower Shield
+ShieldGold | Nord Shield
+ShieldGoldBuckler | Nord Buckler
+ShieldGoldTower | Nord Greatshield
+ShieldIronBuckler | Iron Buckler
+ShieldIronSquare | Iron Shield
+ShieldIronTower | Iron Tower Shield
+ShieldKnight | Knight shield UNUSED
+ShieldRoots | Shield of Roots
+ShieldRoundGoldUncooked | Cast: Nord Shield
+ShieldSerpentscale | Serpent Scale Shield
+ShieldSilver | Silver Shield
+ShieldTowerGoldUncooked | Cast: Nord Greatshield
+ShieldWood | Wood Shield
+ShieldWoodTower | Wood Tower Shield
+ShocklateSmoothie | Muckshake
+Shovel | Snow Shovel
+Silver | Silver
+SilverNecklace | Silver Necklace
+SilverOre | Silver Ore
+SizzlingBerryBroth | Sizzling Berry Broth
+skeleton_bow | Bow
+skeleton_bow2 | Bow
+skeleton_bow_meadows | Bow
+skeleton_bow_mountains | Bow
+skeleton_bow_swamps | Bow
+skeleton_hildir_firenova | Fire Skeleton Sword
+skeleton_mace | Dragur axe
+skeleton_mace_DeepNorth | Dragur axe
+skeleton_sword | Dragur axe
+skeleton_sword2 | Dragur axe
+skeleton_sword_hildir | Fire Skeleton Sword
+skeleton_sword_meadows | Dragur axe
+skeleton_sword_mountains | Dragur axe
+skeleton_sword_swamps | Dragur axe
+SledgeCheat | Cheat sledge
+SledgeDemolisher | Demolisher
+SledgeGold | Nord Sledge
+SledgeGold_BloodLightning | Thunderblood Sledge
+SledgeGold_FrostFire | Frostfire Sledge
+SledgeGoldUncooked | Cast: Nord Sledge
+SledgeIron | Iron Sledge
+SledgeStagbreaker | Stagbreaker
+SledgeWood | Wooden Sledge
+SmallPartsGoldUncooked | [item_smallparts_gold_uncooked]
+SmokedFish | Smoked Fish
+SmokedMooseMeat | Smoked Moose Meat
+Snowball | Snowball
+SnowballBig | Big Snowball
+Softtissue | Soft Tissue
+SP_ArmorBronzeChest | Bronze Plate Tunic
+SP_ArmorBronzeLegs | Bronze Plate Leggings
+SP_ArmorDress1 | Plain Brown Dress
+SP_ArmorFenringChest | Fenris Coat
+SP_ArmorFenringLegs | Fenris Leggings
+SP_ArmorLeatherLegs | Leather Trousers
+SP_ArmorMageChest | Eitr-weave Robe
+SP_ArmorMageChest_Ashlands | Robes of Embla
+SP_ArmorMageLegs | Eitr-weave Trousers
+SP_ArmorMageLegs_Ashlands | Trousers of Embla
+SP_ArmorPaddedCuirass | Padded Cuirass
+SP_ArmorPaddedGreaves | Padded Greaves
+SP_ArmorTrollLeatherChest | Troll Leather Tunic
+SP_ArmorTrollLeatherLegs | Troll Leather Trousers
+SP_ArmorTunic5 | Red Tunic with Cape
+SP_AxeBronze | Bronze Axe
+SP_BattleaxeCrystal | Crystal Battleaxe
+SP_BowDraugrFang | Draugr Fang
+SP_CapeLinen | Linen Cape
+SP_CapeTrollHide | Troll Hide Cape
+SP_CapeWolf | Wolf Fur Cape
+SP_HelmetBronze | Bronze Helmet
+SP_KnifeSilver | Silver Knife
+SP_KnifeSkollAndHati | Skoll and Hati
+SP_ShieldBlackmetalTower | Black Metal Tower Shield
+SP_StaffFireball | Staff of Embers
+SP_StaffLightning | Dundr
+SP_SwordBlackmetal | Black Metal Sword
+Sparkler | Sparkler
+SparklingShroomshake | Sparkling Shroomshake
+SpearBronze | Bronze Spear
+SpearCarapace | Carapace Spear
+SpearChitin | Abyssal Harpoon
+SpearElderbark | Ancient Bark Spear
+SpearFlint | Flint Spear
+SpearGold | Nord Spear
+SpearGold_BloodLightning | Thunderblood Spear
+SpearGold_FrostFire | Frostfire Spear
+SpearGoldUncooked | Cast: Nord Spear
+SpearSplitner | Splitnir
+SpearSplitner_Blood | Splitnir the Bleeding
+SpearSplitner_Lightning | Splitnir the Storming
+SpearSplitner_Nature | Splitnir the Primal
+SpearWolfFang | Fang Spear
+SpearWood | Wooden Spear
+SpiceAshlands | Fiery Spice Powder
+SpiceDeepNorth | Seasoning of the Gourd
+SpiceForests | Woodland Herb Blend
+SpiceMistlands | Herbs of the Hidden Hills
+SpiceMountains | Mountain Peak Pepper Powder
+SpiceOceans | Seafarer's Herbs
+SpicePlains | Grasslands Herbalist Harvest
+SpicyMarmalade | Spicy Marmalade
+spiritbjorn_bite | bjorn bite
+spiritbjorn_claws | bjorn bite
+spiritbjorn_swipe_combo | bjorn bite
+spiritbjorn_swipe_l | bjorn bite
+spiritbjorn_swipe_r | bjorn bite
+staff_greenroots_tentaroot_attack | Dragur axe
+StaffClusterbomb | Staff of Fracturing
+StaffFireball | Staff of Embers
+StaffFrostOrbs | Northern Vengeance
+StaffFrostOrbsUncooked | Cast: Northern Vengeance
+StaffGreenRoots | Staff of the Wild
+StaffIceShards | Staff of Frost
+StaffLightning | Dundr
+StaffOrbofAhri | Echo Spike
+StaffOrbofAhriUncooked | Cast: Echo Spike
+StaffRedTroll | Trollstav
+StaffShield | Staff of Protection
+StaffSkeleton | Dead Raiser
+StaffSpiritCaller | Spirit Caller
+StaffSpiritCallerUncooked | Cast: Spirit Caller
+StaffThunderBlood | Lightning Strike
+StaffThunderbloodUncooked | Cast: Lightning Strike
+StaminaUpgrade_Greydwarf | Stamina Greydwarf
+StaminaUpgrade_Troll | Stamina Troll
+StaminaUpgrade_Wraith | Stamina Wraith
+Stone | Stone
+stonegolem_attack1_spike | Spike attack
 StoneGolem_clubs
 StoneGolem_hat
 StoneGolem_spikes
-StoneRock
-SulfurStone
-SurtlingCore
-Sword2h_JotunWarrior
-SwordBlackmetal
-SwordBronze
-SwordCheat
-SwordDyrnwyn
-SwordGold
-SwordGold_BloodLightning
-SwordGold_FrostFire
-SwordGoldUncooked
-SwordIron
-SwordIronFire
-SwordMistwalker
-SwordNiedhogg
-SwordNiedhoggBlood
-SwordNiedhoggLightning
-SwordNiedhoggNature
-SwordSilver
-SwordWood
-Tankard
-Tankard_dvergr
-TankardAnniversary
-TankardOdin
-Tar
-tendril_attack
-tentaroot_attack
-Thistle
-THSwordGold
-THSwordGold_BloodLightning
-THSwordGold_FrostFire
-THSwordGoldUncooked
-THSwordKrom
-THSwordSlayer
-THSwordSlayerBlood
-THSwordSlayerLightning
-THSwordSlayerNature
-THSwordWood
-Thunderstone
-Tin
-TinOre
-Torch
-TorchMist
-TrinketBlackDamageHealth
-TrinketBlackStamina
-TrinketBloodGoldHealth
-TrinketBloodGoldStamina
-TrinketBronzeHealth
-TrinketBronzeStamina
-TrinketCarapaceEitr
-TrinketChitinSwim
-TrinketFlametalEitr
-TrinketFlametalStaminaHealth
-TrinketIronHealth
-TrinketIronStamina
-TrinketScaleStaminaDamage
-TrinketSilverDamage
-TrinketSilverResist
-troll_log_swing_h
-troll_log_swing_v
-troll_summoned_log_swing_h
-troll_summoned_log_swing_v
-TrollHide
-TrophyAbomination
-TrophyAsksvin
-TrophyBarka
-TrophyBjorn
-TrophyBjornUndead
-TrophyBlob
-TrophyBlob_Frost
-TrophyBlob_Lava
-TrophyBlob_Morkhalla
-TrophyBoar
-TrophyBonemass
-TrophyBonemawSerpent
-TrophyCharredArcher
-TrophyCharredMage
-TrophyCharredMelee
-TrophyCultist
-TrophyCultist_Hildir
-TrophyDeathsquito
-TrophyDeer
-TrophyDeerWhite
-TrophyDragonQueen
-TrophyDraugr
-TrophyDraugrElite
-TrophyDraugrFem
-TrophyDvergr
-TrophyEikthyr
-TrophyElaking
-TrophyFader
-TrophyFallenValkyrie
-TrophyFenring
-TrophyForestTroll
-TrophyFrostTroll
-TrophyGhost
-TrophyGjall
-TrophyGoblin
-TrophyGoblinBrute
-TrophyGoblinBruteBrosBrute
-TrophyGoblinBruteBrosShaman
-TrophyGoblinKing
-TrophyGoblinShaman
-TrophyGreydwarf
-TrophyGreydwarfBrute
-TrophyGreydwarfShaman
-TrophyGrowth
-TrophyHare
-TrophyHatchling
-TrophyJotunWarrior
-TrophyJotunWitch
-TrophyKvastur
-TrophyLeech
-TrophyLox
-TrophyMole
-TrophyMoose
-TrophyMorgen
-TrophyNeck
-TrophySeal
-TrophySeeker
-TrophySeekerBrute
-TrophySeekerQueen
-TrophySerpent
-TrophySGolem
-TrophySkeleton
-TrophySkeletonHildir
-TrophySkeletonPoison
-TrophySurtling
-TrophyTheElder
-TrophyTick
-TrophyUlv
-TrophyVolture
-TrophyWolf
-TrophyWraith
-TrophyWrithan
-Turnip
-TurnipSeeds
-TurnipStew
-TurretBolt
-TurretBoltBloodgold
-TurretBoltBone
-TurretBoltFlametal
-TurretBoltWood
-Ulv_attack1_bite
-Ulv_attack2_slash
-unbjorn_bite
-unbjorn_claws
-unbjorn_swipe_combo
-unbjorn_swipe_l
-unbjorn_swipe_r
-UndeadBjornRibcage
-Upgrader0Armor
-Upgrader0Weapon
-Upgrader1Armor
-Upgrader1Weapon
-Upgrader2Armor
-Upgrader2Weapon
-Upgrader3Armor
-Upgrader3Weapon
-Upgrader4Armor
-Upgrader4Weapon
-Upgrader5Armor
-Upgrader5Weapon
-Upgrader6Armor
-Upgrader6Weapon
-Upgrader7Armor
-Upgrader7Weapon
-VegvisirShard_Bonemass
-VikingCupcake
-VikingCupcakeUncooked
-Vineberry
-VineberrySeeds
-VineGreenSeeds
-Voidplasm
-volture_talons
-VoltureEgg
-VoltureMeat
-Wishbone
-Wisp
-WitheredBone
-WolfClaw
-WolfFang
-WolfHairBundle
-WolfJerky
-WolfMeat
-WolfMeatSkewer
-WolfPelt
-Wood
-wraith_melee
-writhan_bite
-WrithanRoots
-YagluthDrop
-YggdrasilPorridge
-YggdrasilWood
-YmirRemains
+StoneRock | Rock
+SulfurStone | Sulfur
+SurtlingCore | Surtling Core
+Sword2h_JotunWarrior | Club
+SwordBlackmetal | Black Metal Sword
+SwordBronze | Bronze Sword
+SwordCheat | Cheat sword
+SwordDyrnwyn | Dyrnwyn
+SwordGold | Nord Sword
+SwordGold_BloodLightning | Thunderblood Sword
+SwordGold_FrostFire | Frostfire Sword
+SwordGoldUncooked | Cast: Nord Sword
+SwordIron | Iron Sword
+SwordIronFire | Dyrnwyn
+SwordMistwalker | Mistwalker
+SwordNiedhogg | Nidhgg
+SwordNiedhoggBlood | Nidhgg the Bleeding
+SwordNiedhoggLightning | Nidhgg the Thundering
+SwordNiedhoggNature | Nidhgg the Primal
+SwordSilver | Silver Sword
+SwordWood | Wooden Sword
+Tankard | Tankard
+Tankard_dvergr | Dvergr Tankard
+TankardAnniversary | Horn of Celebration
+TankardOdin | Mead Horn of Oden
+Tar | Tar
+tendril_attack | Dragur axe
+tentaroot_attack | Dragur axe
+Thistle | Thistle
+THSwordGold | Nord Greatsword
+THSwordGold_BloodLightning | Thunderblood Greatsword
+THSwordGold_FrostFire | Frostfire Greatsword
+THSwordGoldUncooked | Cast: Nord Greatsword
+THSwordKrom | Krom
+THSwordSlayer | Slayer
+THSwordSlayerBlood | Brutal Slayer
+THSwordSlayerLightning | Scourging Slayer
+THSwordSlayerNature | Primal Slayer
+THSwordWood | Wooden Greatsword
+Thunderstone | Thunder Stone
+Tin | Tin
+TinOre | Tin Ore
+Torch | Torch
+TorchMist | [item_torchmist]
+TrinketBlackDamageHealth | Bracelets of the Brave
+TrinketBlackStamina | Evasion Mantle
+TrinketBloodGoldHealth | Neckstabber
+TrinketBloodGoldStamina | Witch Crown
+TrinketBronzeHealth | Heart of the Forest
+TrinketBronzeStamina | Bronze Pendant
+TrinketCarapaceEitr | Pulsating Earrings
+TrinketChitinSwim | Fins of Destiny
+TrinketFlametalEitr | Jrmundling
+TrinketFlametalStaminaHealth | Brimstone
+TrinketIronHealth | Iron Brooch
+TrinketIronStamina | Nimble Anklet
+TrinketScaleStaminaDamage | Resounding Shackle
+TrinketSilverDamage | Wolf Sight
+TrinketSilverResist | Crystal Heart
+troll_log_swing_h | LOG
+troll_log_swing_v | LOG
+troll_summoned_log_swing_h | LOG
+troll_summoned_log_swing_v | LOG
+TrollHide | Troll Hide
+TrophyAbomination | Abomination Trophy
+TrophyAsksvin | Asksvin Trophy
+TrophyBarka | Barka Trophy
+TrophyBjorn | Bear Trophy
+TrophyBjornUndead | Vile Trophy
+TrophyBlob | Blob Trophy
+TrophyBlob_Frost | Frost Blob Trophy
+TrophyBlob_Lava | Lava Blob Trophy
+TrophyBlob_Morkhalla | Pulp Trophy
+TrophyBoar | Boar Trophy
+TrophyBonemass | Bonemass Trophy
+TrophyBonemawSerpent | Bonemaw Trophy
+TrophyCharredArcher | Marksman Trophy
+TrophyCharredMage | Warlock Trophy
+TrophyCharredMelee | Warrior Trophy
+TrophyCultist | Cultist Trophy
+TrophyCultist_Hildir | Geirrhafa Trophy
+TrophyDeathsquito | Deathsquito Trophy
+TrophyDeer | Deer Trophy
+TrophyDeerWhite | [item_trophy_deer_white]
+TrophyDragonQueen | Moder Trophy
+TrophyDraugr | Draugr Trophy
+TrophyDraugrElite | Draugr Elite Trophy
+TrophyDraugrFem | Draugr Trophy
+TrophyDvergr | Dvergr Trophy
+TrophyEikthyr | Eikthyr Trophy
+TrophyElaking | Elaking Trophy
+TrophyFader | Fader Trophy
+TrophyFallenValkyrie | Fallen Valkyrie Trophy
+TrophyFenring | Fenring Trophy
+TrophyForestTroll | Troll Trophy
+TrophyFrostTroll | Troll Trophy
+TrophyGhost | Ghost Trophy
+TrophyGjall | Gjall Trophy
+TrophyGoblin | Fuling Trophy
+TrophyGoblinBrute | Fuling Berserker Trophy
+TrophyGoblinBruteBrosBrute | Thungr Trophy
+TrophyGoblinBruteBrosShaman | Zil Trophy
+TrophyGoblinKing | Yagluth Trophy
+TrophyGoblinShaman | Fuling Shaman Trophy
+TrophyGreydwarf | Greydwarf Trophy
+TrophyGreydwarfBrute | Greydwarf Brute Trophy
+TrophyGreydwarfShaman | Greydwarf Shaman Trophy
+TrophyGrowth | Growth Trophy
+TrophyHare | Hare Trophy
+TrophyHatchling | Drake Trophy
+TrophyJotunWarrior | Krigen Trophy
+TrophyJotunWitch | Hexen Trophy
+TrophyKvastur | Kvastur
+TrophyLeech | Leech Trophy
+TrophyLox | Lox Trophy
+TrophyMole | Eyeless One Trophy
+TrophyMoose | Moose Trophy
+TrophyMorgen | Morgen Trophy
+TrophyNeck | Neck Trophy
+TrophySeal | Seal Trophy
+TrophySeeker | Seeker Trophy
+TrophySeekerBrute | Seeker Soldier Trophy
+TrophySeekerQueen | The Queen Trophy
+TrophySerpent | Serpent Trophy
+TrophySGolem | Stone Golem Trophy
+TrophySkeleton | Skeleton Trophy
+TrophySkeletonHildir | Brenna Trophy
+TrophySkeletonPoison | Rancid Remains Trophy
+TrophySurtling | Surtling Trophy
+TrophyTheElder | The Elder Trophy
+TrophyTick | Tick Trophy
+TrophyUlv | Ulv Trophy
+TrophyVolture | Volture Trophy
+TrophyWolf | Wolf Trophy
+TrophyWraith | Wraith Trophy
+TrophyWrithan | Writhan Trophy
+Turnip | Turnip
+TurnipSeeds | Turnip Seeds
+TurnipStew | Turnip Stew
+TurretBolt | Black Metal Missile
+TurretBoltBloodgold | Bloodgold Missile
+TurretBoltBone | [item_turretboltbone]
+TurretBoltFlametal | Flametal Missile
+TurretBoltWood | Wooden Missile
+Ulv_attack1_bite | Bite Attack
+Ulv_attack2_slash | Slash Attack
+unbjorn_bite | bjorn bite
+unbjorn_claws | bjorn bite
+unbjorn_swipe_combo | bjorn bite
+unbjorn_swipe_l | bjorn bite
+unbjorn_swipe_r | bjorn bite
+UndeadBjornRibcage | Vile Ribcage
+Upgrader0Armor | Wooden Protection Idol
+Upgrader0Weapon | Wooden Battle Idol
+Upgrader1Armor | Bronze Protection Idol
+Upgrader1Weapon | Bronze Battle Idol
+Upgrader2Armor | Iron Protection Idol
+Upgrader2Weapon | Iron Battle Idol
+Upgrader3Armor | Silver Protection Idol
+Upgrader3Weapon | Silver Battle Idol
+Upgrader4Armor | Black Metal Protection Idol
+Upgrader4Weapon | Black Metal Battle Idol
+Upgrader5Armor | Black Marble Protection Idol
+Upgrader5Weapon | Black Marble Battle Idol
+Upgrader6Armor | Flametal Protection Idol
+Upgrader6Weapon | Flametal Battle Idol
+Upgrader7Armor | Bloodgold Protection Idol
+Upgrader7Weapon | Bloodgold Battle Idol
+VegvisirShard_Bonemass | Yagluth thing
+VikingCupcake | Frosted Sweetbread
+VikingCupcakeUncooked | Unbaked Sweetbread
+Vineberry | Vineberry Cluster
+VineberrySeeds | Vineberry Seeds
+VineGreenSeeds | Ivy Seeds
+Voidplasm | Ectoplasm
+volture_talons | Volture Talons
+VoltureEgg | Volture Egg
+VoltureMeat | Volture Meat
+Wishbone | Wishbone
+Wisp | Wisp
+WitheredBone | Withered Bone
+WolfClaw | Fenris Claw
+WolfFang | Wolf Fang
+WolfHairBundle | Fenris Hair
+WolfJerky | Wolf Jerky
+WolfMeat | Wolf Meat
+WolfMeatSkewer | Wolf Skewer
+WolfPelt | Wolf Pelt
+Wood | Wood
+wraith_melee | Wraith melee
+writhan_bite | writhan bite
+WrithanRoots | Writhan Roots
+YagluthDrop | Torn Spirit
+YggdrasilPorridge | Yggdrasil Porridge
+YggdrasilWood | Yggdrasil Wood
+YmirRemains | Ymir Flesh

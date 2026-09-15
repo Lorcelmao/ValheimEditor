@@ -556,7 +556,7 @@ input[type="color"] {
 }
 
 .combobox-input {
-  width: 22ch;
+  width: 26ch;
 }
 
 .combobox-list {
@@ -577,8 +577,10 @@ input[type="color"] {
 }
 
 .combobox-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
   padding: 6px 10px;
-  font-family: var(--font-mono);
   font-size: 0.85rem;
   cursor: pointer;
   white-space: nowrap;
@@ -587,6 +589,22 @@ input[type="color"] {
 .combobox-list li.active {
   background: var(--accent);
   color: var(--on-accent);
+}
+
+/* The prefab codename beside the in-game name: present because it is the real
+   identifier, muted because it is not what the reader is scanning for. */
+.combobox-hint, .item-prefab {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.combobox-list li.active .combobox-hint {
+  color: inherit;
+  opacity: 0.75;
+}
+
+.item-prefab {
+  display: block;
 }
 
 .radio-group label {

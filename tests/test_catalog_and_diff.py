@@ -39,9 +39,9 @@ def test_no_two_prefab_names_share_a_hash():
     one of the two names before names() is ever called -- checking there
     would be vacuous and could never fail.
     """
-    raw = items_module._parse(
+    raw = [e.prefab for e in items_module._parse(
         files("fch_editor.catalog").joinpath("data/items.txt").read_text(encoding="utf-8")
-    )
+    )]
     by_hash: dict[int, str] = {}
     collisions = []
     for name in raw:
@@ -53,6 +53,55 @@ def test_no_two_prefab_names_share_a_hash():
     # Every parsed name survives into the catalog -- i.e. nothing was silently
     # swallowed by a collision or a duplicate line.
     assert len(ItemCatalog.load().names()) == len(set(raw))
+
+
+def test_bare_prefab_name_list_still_loads(tmp_path):
+    """--items FILE has always taken one bare prefab name per line, and it is
+    the documented workaround when the bundled catalog falls behind the game
+    (it was once missing 41% of real items). Adding metadata columns must not
+    break a list a user already has."""
+    extra = tmp_path / "mine.txt"
+    extra.write_text("# my items\nBrandNewItem\n\nAnotherOne\n", encoding="utf-8")
+    catalog = ItemCatalog.load([extra])
+    assert "BrandNewItem" in catalog and "AnotherOne" in catalog
+    assert catalog.label(stable_hash("BrandNewItem")) == "BrandNewItem"
+    # No display name is not an error -- it falls back to the prefab name.
+    assert catalog.display(stable_hash("BrandNewItem")) is None
+
+
+@pytest.mark.parametrize("line, expected", [
+    ("ArmorBronzeChest | Bronze Cuirass | Chest", ("ArmorBronzeChest", "Bronze Cuirass", "Chest")),
+    ("Wood | Wood", ("Wood", "Wood", None)),                  # trailing column omitted
+    ("AnotherItem | | Material", ("AnotherItem", None, "Material")),  # type known, name not
+    ("SomeModItem", ("SomeModItem", None, None)),             # bare name
+    ("  Spaced  |  Padded Name  ", ("Spaced", "Padded Name", None)),
+])
+def test_catalog_line_format(line, expected):
+    assert items_module._parse(line) == [expected]
+
+
+def test_display_name_is_additive_not_a_replacement():
+    """`label()` must keep returning the prefab name: it is what the save
+    hashes, what the CLI takes, and what `item_add` accepts. Showing only the
+    display name anywhere would leave the user unable to add the item."""
+    catalog = ItemCatalog.load()
+    h = stable_hash("ArmorBronzeChest")
+    assert catalog.label(h) == "ArmorBronzeChest"
+    assert catalog.name(h) == "ArmorBronzeChest"
+    # The game's own name for it, per the 1.0.7 dump -- not "Bronze Cuirass",
+    # which is what a community table calls it.
+    assert catalog.display(h) == "Bronze Plate Tunic"
+    assert catalog.display(stable_hash("NotARealItem")) is None
+    assert ItemCatalog.load().names()[:1] != []  # still bare prefab names
+
+
+def test_every_catalog_entry_has_a_usable_label():
+    """A blank display column is real in the shipped data (three
+    StoneGolem_* prefabs have no English name) and must degrade to the prefab
+    name rather than rendering an empty row."""
+    for entry in ItemCatalog.load().entries():
+        assert entry.prefab
+        assert entry.display is None or entry.display.strip()
 
 
 @pytest.mark.parametrize("prefab", [

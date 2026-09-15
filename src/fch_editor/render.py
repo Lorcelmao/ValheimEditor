@@ -69,6 +69,11 @@ def to_json(save: LoadedSave, catalog: ItemCatalog, section: str | None = None) 
     if p.player is not None:
         for item in full["player"]["items"]:
             item["name"] = catalog.label(item["prefab_hash"])
+            # Presentation only, and additive: `name` stays the prefab name (or
+            # #hexhash), because that is what the save hashes and what the CLI
+            # and `item_add` accept. A consumer that shows only the display name
+            # would leave the user unable to add or cross-reference the item.
+            item["display_name"] = catalog.display(item["prefab_hash"]) or item["name"]
             # `durability` and `equipped` are computed properties on the Item
             # dataclass (see model.py), so dataclasses.fields()-based
             # serialization in _jsonable() only emits the raw fields they're
@@ -127,9 +132,15 @@ def info_text(save: LoadedSave, catalog: ItemCatalog) -> str:
 
 
 def item_line(it, catalog: ItemCatalog) -> str:
+    # The prefab name keeps the aligned column -- it is what `fch inv add`
+    # takes, so it stays the thing you can read straight down the list. The
+    # in-game name trails, and only when it says something the prefab doesn't.
+    name = catalog.label(it.prefab_hash)
+    display = catalog.display(it.prefab_hash)
     extra = "".join([" [equipped]" if it.equipped else "", f" q{it.quality}" if it.quality != 1 else "",
-                     f" by {it.crafter_name}" if it.crafter_name else ""])
-    return f"({it.x},{it.y}) {catalog.label(it.prefab_hash):<24} x{it.stack:<4} dur {it.durability:g}{extra}"
+                     f" by {it.crafter_name}" if it.crafter_name else "",
+                     f"  ({display})" if display and display != name else ""])
+    return f"({it.x},{it.y}) {name:<24} x{it.stack:<4} dur {it.durability:g}{extra}"
 
 
 def _pt(v) -> str:

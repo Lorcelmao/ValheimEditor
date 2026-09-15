@@ -159,7 +159,11 @@ class Session:
             "beards": list(BEARDS),
             "hairs": list(HAIRS),
             "guardian_powers": [{"id": pid, "name": name} for pid, name in GUARDIAN_POWERS.items()],
-            "items": self._catalog.names(),
+            # Entries, not bare names: the picker shows the display name and
+            # matches typing against either field. `prefab` is still the value
+            # an `item_add` spec carries.
+            "items": [{"prefab": e.prefab, "display": e.display, "type": e.item_type}
+                      for e in self._catalog.entries()],
         }
 
     def _describe(self) -> dict:

@@ -137,7 +137,15 @@ class InventoryTab(ttk.Frame):
         self.grid_label.configure(text=f"grid: {width}x{height}  ({len(profile.player.items)} items)")
         for it in sorted(profile.player.items, key=lambda i: (i.y, i.x)):
             self.tree.insert("", "end", values=(
-                f"{it.x},{it.y}", self.app.catalog.label(it.prefab_hash), it.stack, f"{it.durability:g}",
+                f"{it.x},{it.y}", self._item_label(it), it.stack, f"{it.durability:g}",
                 "yes" if it.equipped else "", it.crafter_name,
             ))
         self.name_box.set_values(self.app.catalog.names())
+
+    def _item_label(self, it) -> str:
+        """In-game name with the prefab name in parentheses. Both, because the
+        add box below takes the prefab name -- showing only "Bronze Plate
+        Tunic" would leave the user with nothing they could type."""
+        name = self.app.catalog.label(it.prefab_hash)
+        display = self.app.catalog.display(it.prefab_hash)
+        return f"{display} ({name})" if display and display != name else name
