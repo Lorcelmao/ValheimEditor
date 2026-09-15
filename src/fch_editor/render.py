@@ -10,6 +10,7 @@ from .catalog.enums import scope_name, skill_name, stat_name
 from .catalog.items import ItemCatalog
 from .codec.map_blob import decode_map
 from .diffing import F32Bits
+from .edits.inventory import grid_size
 from .reader import F32, RawF32
 from .errors import FchError
 from .load import LoadedSave
@@ -67,6 +68,13 @@ def to_json(save: LoadedSave, catalog: ItemCatalog, section: str | None = None) 
         w["map"] = map_summary(raw)
         del w["map_data"]
     if p.player is not None:
+        # The inventory's real dimensions, so a UI can lay items out spatially
+        # without re-deriving them. `grid_size` reads the `invrows` unique with
+        # a clamp and a default; parsing that in a second language (the web
+        # layer can already see `uniques`) would put the same rule in two
+        # places, free to drift.
+        width, height = grid_size(p.player)
+        full["player"]["grid"] = {"width": width, "height": height}
         for item in full["player"]["items"]:
             item["name"] = catalog.label(item["prefab_hash"])
             # Presentation only, and additive: `name` stays the prefab name (or

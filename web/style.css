@@ -724,6 +724,124 @@ input[type="color"] {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
+/* --- inventory grid ------------------------------------------------------
+   The spatial 8xN layout the game itself uses, so a slot coordinate is
+   something you see rather than read out of a column. Column count comes
+   from --cols, set per-save from the profile's real invrows. */
+
+.grid-caption {
+  margin: 0 0 calc(var(--space) * 2);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* Scrolls itself rather than crushing slots or forcing the page sideways. */
+.inv-grid-wrapper {
+  overflow-x: auto;
+}
+
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(64px, 1fr));
+  gap: var(--space);
+  min-width: min-content;
+}
+
+/* Keeps the ARIA row structure without breaking the single CSS grid. */
+.inv-row {
+  display: contents;
+}
+
+.inv-slot {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-height: 64px;
+  padding: var(--space);
+  border: var(--hair) solid var(--border);
+  border-radius: var(--r);
+  background: var(--bg);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.7rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.inv-slot:hover {
+  border-color: var(--border-lit);
+}
+
+.inv-slot.occupied {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* Selected is marked by border weight and colour AND an inset ring, so it
+   survives being seen without colour. */
+.inv-slot.selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.slot-name {
+  overflow: hidden;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.slot-stack {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.slot-equipped {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  color: var(--accent);
+  font-size: 0.7rem;
+}
+
+.slot-detail {
+  margin-top: calc(var(--space) * 4);
+  padding: calc(var(--space) * 3);
+  border: var(--hair) solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+}
+
+.slot-detail h3 {
+  margin: 0 0 var(--space);
+}
+
+.slot-detail-name {
+  margin-bottom: calc(var(--space) * 2);
+}
+
+.slot-detail-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--space) * 2);
+  margin-top: calc(var(--space) * 2);
+}
+
+.slot-detail-equipped {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+.add-target {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
 /* --- responsive ----------------------------------------------------------
    Side gutters come from body's padding-inline; nothing here needs its own
    horizontal margin at narrow widths. Tabs wrap rather than overflow. */

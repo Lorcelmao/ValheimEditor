@@ -43,6 +43,21 @@ third-party dependency (or if the CDN is unreachable in your environment):
 This costs roughly 10 MB of your own host's bandwidth per first-time visitor (cached afterward) in
 exchange for no third-party request.
 
+## The inventory grid
+
+The Inventory tab lays items out on the same 8×N grid the game uses, sized from the save's own
+`invrows` rather than a fixed height. Select a slot (click, or arrow-keys — the grid is a single tab
+stop) to see the full item in the panel below and edit its stack or durability; select an empty slot
+to aim **Add item** at those exact coordinates.
+
+Items the grid cannot place are listed underneath it rather than hidden — an item whose coordinates
+fall outside the grid (a mod, or a shrunken `invrows`), or two items claiming the same slot. The
+out-of-grid ones stay fully editable. Items sharing a slot are shown read-only, because an edit
+addressed by slot would be ambiguous and the editor refuses to guess which one you meant.
+
+Item names show the in-game name with the prefab codename beside it. The prefab name is the real
+identifier — it is what the save stores, what `fch inv add` takes, and what you type to add an item.
+
 ## What the web app cannot do
 
 Unlike the CLI (`safe_io.py`) and the Tkinter GUI, the browser has no access to your filesystem or

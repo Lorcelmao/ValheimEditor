@@ -137,6 +137,10 @@ function openBytes(bytes) {
   dropZoneEl.hidden = true;
   viewerEl.hidden = false;
   downloadConfirmationEl.hidden = true;
+  // A coordinate chosen while looking at the previous character means nothing
+  // here: without this, "Open another" carries the old selection and, worse,
+  // an add still aimed at a slot the user picked in a different save.
+  resetInventoryViewState();
   refreshAll(); // renders from session.preview(), not from `result` directly -- one source of truth
 }
 
@@ -537,66 +541,312 @@ function renderCharacter(profile, writable) {
 
 // --- inventory -----------------------------------------------------------
 
+// --- inventory grid --------------------------------------------------------
+// The spatial 8xN layout the game itself uses, replacing the flat table.
+//
+// The selected slot is held as a COORDINATE, never as an element reference:
+// refreshAll() rebuilds this whole panel from preview() after every edit, so a
+// captured element would be detached from the document the moment the first
+// stack change committed, and the detail panel would blank itself on every
+// keystroke.
+//
+// Selecting a slot is a *view* action, so it never re-renders the panel: it
+// repaints the slots' selected state and refills the detail box in place.
+// Rebuilding everything instead would wipe whatever the user had half-typed
+// into the add-item form below, which the table this replaces never did.
+let selectedSlot = null;   // {x, y}, or null for nothing selected
+let addTargetSlot = null;  // {x, y} the add form is aimed at, or null for "first free slot"
+
+// Both are coordinates chosen while looking at one particular save. Opening
+// another one must start clean -- see openBytes().
+function resetInventoryViewState() {
+  selectedSlot = null;
+  addTargetSlot = null;
+}
+
 function renderInventory(profile, writable) {
   const panel = document.querySelector('[data-panel="inventory"]');
   panel.innerHTML = "";
-  const items = profile && profile.player ? profile.player.items : null;
-  if (!items) {
+  const player = profile && profile.player ? profile.player : null;
+  if (!player || !player.items) {
     panel.appendChild(el("p", { text: "This save's player data could not be read." }));
     return;
   }
-
-  if (items.length === 0) {
-    panel.appendChild(el("p", { text: "No items." }));
-  } else {
-    const sorted = items.slice().sort((a, b) => (a.y - b.y) || (a.x - b.x));
-    const rows = sorted.map((it) => {
-      const stackInput = el("input", { type: "number", min: "1", max: "65535", step: "1", value: it.stack, class: "mono", disabled: !writable });
-      const durInput = el("input", { type: "number", min: "0", step: "any", value: f32Text(it.durability), class: "mono", disabled: !writable });
-      // Both fields commit together as ONE combined item_field edit,
-      // whichever one changed -- never two independent partial edits for the
-      // same slot. `edit_key` dedups a pending SetItemField by slot alone and
-      // fully *replaces* the earlier one on a second add() (by design, and
-      // relied on elsewhere: see test_edit_state.py), so two separate
-      // partial commits (stack-only, then durability-only) would silently
-      // drop whichever field was edited first instead of merging.
-      const commitItemField = () => {
-        const n = parseInt(stackInput.value, 10);
-        if (!Number.isInteger(n)) { showError("Stack must be a whole number."); refreshAll(); return; }
-        const d = parseFloat(durInput.value);
-        if (!Number.isFinite(d)) { showError("Durability must be a number."); refreshAll(); return; }
-        submitEdit({ kind: "item_field", slot: [it.x, it.y], stack: n, durability: d });
-      };
-      stackInput.addEventListener("change", commitItemField);
-      durInput.addEventListener("change", commitItemField);
-      const removeBtn = el("button", { type: "button", class: "btn-outline btn-danger", text: "Remove", disabled: !writable });
-      removeBtn.addEventListener("click", () => submitEdit({ kind: "item_remove", slot: [it.x, it.y] }));
-      return [
-        el("td", { class: "mono", text: `${it.x},${it.y}` }),
-        // Display name primary, prefab name secondary -- never only the
-        // display name: the prefab is the identifier the save, the CLI and
-        // `item_add` all speak. Suppressed when they're the same string, or
-        // when the item isn't in the catalog at all (`name` is then #hexhash).
-        el("td", {}, it.display_name === it.name
-          ? [el("span", { text: it.name })]
-          : [el("span", { text: it.display_name }),
-             el("span", { class: "item-prefab mono", text: it.name })]),
-        el("td", { class: "mono num" }, [numberField(stackInput)]),
-        el("td", { class: "mono num" }, [numberField(durInput)]),
-        el("td", { text: it.equipped ? "yes" : "" }),
-        el("td", {}, [removeBtn]),
-      ];
-    });
-    panel.appendChild(table(["Slot", "Item", "Stack", "Durability", "Equipped", ""], rows, [2, 3]));
+  const items = player.items;
+  // Geometry comes from Python (grid_size clamps invrows and defaults it).
+  // If it is somehow absent -- an older cached wheel behind a newer app.js --
+  // degrade to "no grid, everything in the list below" rather than throwing:
+  // a throw here would abort the rest of refreshAll(), leave the panel blank,
+  // and make every item in the save unreachable, which is the exact failure
+  // the overflow list exists to prevent.
+  const width = player.grid ? player.grid.width : 0;
+  const height = player.grid ? player.grid.height : 0;
+  if (!player.grid) {
+    panel.appendChild(el("div", { class: "notice notice-warn" }, [
+      el("strong", { text: "Inventory grid size unavailable. " }),
+      el("span", { text: "Showing every item as a list instead. If this persists, reload the page to pick up the current editor build." }),
+    ]));
   }
 
-  panel.appendChild(renderAddItemForm(writable));
+  // A grid that shrank (or a save swapped underneath) can leave a coordinate
+  // pointing at a slot that no longer exists.
+  if (selectedSlot && (selectedSlot.x >= width || selectedSlot.y >= height)) selectedSlot = null;
+  if (addTargetSlot && (addTargetSlot.x >= width || addTargetSlot.y >= height)) addTargetSlot = null;
+
+  // Index by coordinate so each slot is an O(1) lookup instead of a scan of
+  // the item list. Anything that can't be placed goes to the list below
+  // rather than being dropped: the table this replaces showed every item
+  // unconditionally, and silently losing one in a save editor is a
+  // correctness bug, not a cosmetic one.
+  const byCoord = new Map();
+  const overflow = [];
+  for (const it of items) {
+    const key = `${it.x},${it.y}`;
+    const inside = it.x >= 0 && it.x < width && it.y >= 0 && it.y < height;
+    if (inside && !byCoord.has(key)) byCoord.set(key, it);
+    else overflow.push({ item: it, collision: byCoord.has(key) || items.some((o) => o !== it && o.x === it.x && o.y === it.y) });
+  }
+
+  panel.appendChild(el("p", {
+    class: "grid-caption",
+    text: `${width}x${height} grid, ${items.length} item${items.length === 1 ? "" : "s"}`,
+  }));
+
+  const gridEl = el("div", { class: "inv-grid", role: "grid", "aria-label": "Inventory grid", style: `--cols: ${Math.max(width, 1)}` });
+  const detailEl = el("div", { class: "slot-detail" });
+
+  const paintSelection = (focusIt) => {
+    for (const slotEl of gridEl.querySelectorAll(".inv-slot")) {
+      const on = selectedSlot !== null
+        && Number(slotEl.dataset.x) === selectedSlot.x && Number(slotEl.dataset.y) === selectedSlot.y;
+      slotEl.classList.toggle("selected", on);
+      slotEl.setAttribute("aria-selected", on ? "true" : "false");
+      // Roving tabindex: the grid is ONE tab stop, not width*height of them.
+      slotEl.tabIndex = on ? 0 : -1;
+      if (on && focusIt) slotEl.focus();
+    }
+    if (selectedSlot === null) {
+      const first = gridEl.querySelector(".inv-slot");
+      if (first) first.tabIndex = 0; // entry point when nothing is selected
+    }
+    fillSlotDetail(detailEl, byCoord, writable, panel);
+  };
+
+  const select = (x, y, focusIt = true) => {
+    selectedSlot = { x, y };
+    paintSelection(focusIt);
+  };
+
+  for (let y = 0; y < height; y++) {
+    // display: contents on the row keeps the ARIA row structure without
+    // breaking the single CSS grid the cells lay out in.
+    const rowEl = el("div", { class: "inv-row", role: "row" });
+    for (let x = 0; x < width; x++) {
+      rowEl.appendChild(buildSlot(x, y, byCoord.get(`${x},${y}`) || null, select));
+    }
+    gridEl.appendChild(rowEl);
+  }
+  gridEl.addEventListener("keydown", (e) => handleGridKeys(e, width, height));
+  panel.appendChild(el("div", { class: "inv-grid-wrapper" }, [gridEl]));
+  // Re-applies the selection after the full re-render every edit triggers --
+  // without stealing focus, since this is not a user selection.
+  paintSelection(false);
+
+  if (overflow.length > 0) panel.appendChild(renderOverflow(overflow, width, height, writable));
+  panel.appendChild(detailEl);
+  panel.appendChild(renderAddItemForm(writable, panel));
+  paintAddTarget(panel, writable); // the form's indicator host only exists once it's in the panel
+  return panel;
 }
 
-function renderAddItemForm(writable) {
+function buildSlot(x, y, it, onSelect) {
+  const label = it
+    ? `Slot ${x},${y}: ${it.display_name}${it.stack > 1 ? `, stack ${it.stack}` : ""}${it.equipped ? ", equipped" : ""}`
+    : `Slot ${x},${y}, empty`;
+  const slotEl = el("button", {
+    type: "button", role: "gridcell", class: `inv-slot${it ? " occupied" : ""}`,
+    "aria-label": label, "aria-selected": "false",
+    title: it ? `${it.display_name} (${it.name})` : `Empty slot ${x},${y}`,
+    tabindex: "-1",
+  });
+  slotEl.dataset.x = x;
+  slotEl.dataset.y = y;
+  if (it) {
+    slotEl.appendChild(el("span", { class: "slot-name", text: it.display_name }));
+    if (it.stack > 1) slotEl.appendChild(el("span", { class: "slot-stack mono", text: String(it.stack) }));
+    // Not colour alone: equipped carries a glyph as well as its own styling.
+    if (it.equipped) slotEl.appendChild(el("span", { class: "slot-equipped", "aria-hidden": "true", text: "✦" }));
+  }
+  slotEl.addEventListener("click", () => onSelect(x, y));
+  return slotEl;
+}
+
+// Arrow keys move between slots; the grid stays one tab stop. Selection
+// follows focus, which is what makes the detail panel usable without a mouse.
+function handleGridKeys(e, width, height) {
+  const deltas = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  const current = e.target.closest(".inv-slot");
+  if (!current) return;
+  const x = parseInt(current.dataset.x, 10);
+  const y = parseInt(current.dataset.y, 10);
+  let next = null;
+  if (deltas[e.key]) {
+    const [dx, dy] = deltas[e.key];
+    next = { x: Math.min(width - 1, Math.max(0, x + dx)), y: Math.min(height - 1, Math.max(0, y + dy)) };
+  } else if (e.key === "Home") {
+    next = { x: 0, y };
+  } else if (e.key === "End") {
+    next = { x: width - 1, y };
+  } else {
+    return; // Enter/Space are the button's own job -- don't intercept them
+  }
+  e.preventDefault();
+  const target = e.currentTarget.querySelector(`.inv-slot[data-x="${next.x}"][data-y="${next.y}"]`);
+  if (target) target.click();
+}
+
+// Items the grid can't place. Two different reasons, and they are NOT equally
+// editable, so the list says which is which: an item at a coordinate outside
+// the grid edits and removes normally, but when two items claim the same
+// coordinate the Python side refuses to guess which one an edit means
+// ("N items occupy slot x,y in this save") -- so those rows show their values
+// read-only rather than offering controls that can only ever fail.
+function renderOverflow(overflow, width, height, writable) {
+  const collisions = overflow.filter((o) => o.collision).length;
+  const wrapper = el("div", {});
+  const lines = [
+    el("strong", { text: `${overflow.length} item${overflow.length === 1 ? "" : "s"} not shown in the ${width}x${height} grid. ` }),
+    el("span", { text: "Listed below so nothing is hidden — they are all still in the save. " }),
+  ];
+  if (collisions > 0) {
+    lines.push(el("span", {
+      text: `${collisions} share a slot with another item; those cannot be edited or removed here, because an edit by slot would be ambiguous.`,
+    }));
+  }
+  wrapper.appendChild(el("div", { class: "notice notice-warn" }, lines));
+  wrapper.appendChild(table(
+    ["Slot", "Item", "Stack", "Durability", ""],
+    overflow.map(({ item: it, collision }) => {
+      if (collision) {
+        return [
+          el("td", { class: "mono", text: `${it.x},${it.y}` }),
+          el("td", {}, itemNameNodes(it)),
+          el("td", { class: "mono num", text: String(it.stack) }),
+          el("td", { class: "mono num", text: f32Text(it.durability) }),
+          el("td", { class: "muted", text: "shared slot" }),
+        ];
+      }
+      const { stackInput, durInput } = itemFieldInputs(it, writable);
+      return [
+        el("td", { class: "mono", text: `${it.x},${it.y}` }),
+        el("td", {}, itemNameNodes(it)),
+        el("td", { class: "mono num" }, [numberField(stackInput)]),
+        el("td", { class: "mono num" }, [numberField(durInput)]),
+        el("td", {}, [removeButton(it, writable)]),
+      ];
+    }),
+    [2, 3],
+  ));
+  return wrapper;
+}
+
+// Display name primary, prefab name secondary -- never only the display name:
+// the prefab is the identifier the save, the CLI and `item_add` all speak.
+// Collapsed to one line when they're the same string, or when the item isn't
+// in the catalog at all (`name` is then #hexhash).
+function itemNameNodes(it) {
+  return it.display_name === it.name
+    ? [el("span", { text: it.name })]
+    : [el("span", { text: it.display_name }), el("span", { class: "item-prefab mono", text: it.name })];
+}
+
+// Stack and durability commit together as ONE combined item_field edit,
+// whichever one changed -- never two independent partial edits for the same
+// slot. `edit_key` dedups a pending SetItemField by slot alone and fully
+// *replaces* the earlier one on a second add() (by design, and relied on
+// elsewhere: see test_edit_state.py), so two separate partial commits
+// (stack-only, then durability-only) would silently drop whichever field was
+// edited first instead of merging. One function builds both inputs so there
+// is no second commit path to keep in sync.
+function itemFieldInputs(it, writable) {
+  const stackInput = el("input", { type: "number", min: "1", max: "65535", step: "1", value: it.stack, class: "mono", disabled: !writable });
+  const durInput = el("input", { type: "number", min: "0", step: "any", value: f32Text(it.durability), class: "mono", disabled: !writable });
+  const commit = () => {
+    const n = parseInt(stackInput.value, 10);
+    if (!Number.isInteger(n)) { showError("Stack must be a whole number."); refreshAll(); return; }
+    const d = parseFloat(durInput.value);
+    if (!Number.isFinite(d)) { showError("Durability must be a number."); refreshAll(); return; }
+    submitEdit({ kind: "item_field", slot: [it.x, it.y], stack: n, durability: d });
+  };
+  stackInput.addEventListener("change", commit);
+  durInput.addEventListener("change", commit);
+  return { stackInput, durInput };
+}
+
+function removeButton(it, writable) {
+  const btn = el("button", { type: "button", class: "btn-outline btn-danger", text: "Remove", disabled: !writable });
+  btn.addEventListener("click", () => submitEdit({ kind: "item_remove", slot: [it.x, it.y] }));
+  return btn;
+}
+
+// The slot is too small to show everything; this box shows all of it. Filled
+// in place rather than rebuilt with the panel, so selecting a slot doesn't
+// disturb anything else on the tab.
+function fillSlotDetail(detailEl, byCoord, writable, panel) {
+  detailEl.innerHTML = "";
+  if (!selectedSlot) {
+    detailEl.appendChild(el("p", { class: "muted", text: "Select a slot to see and edit what's in it." }));
+    return;
+  }
+  const { x, y } = selectedSlot;
+  const it = byCoord.get(`${x},${y}`) || null;
+  detailEl.appendChild(el("h3", { text: `Slot ${x},${y}` }));
+
+  if (!it) {
+    const aimBtn = el("button", { type: "button", class: "btn-outline", text: "Add an item here", disabled: !writable });
+    aimBtn.addEventListener("click", () => {
+      addTargetSlot = { x, y };
+      paintAddTarget(panel);
+      const input = panel.querySelector(".combobox-input");
+      if (input) input.focus();
+    });
+    detailEl.appendChild(el("p", { class: "muted", text: "Empty." }));
+    detailEl.appendChild(aimBtn);
+    return;
+  }
+
+  const { stackInput, durInput } = itemFieldInputs(it, writable);
+  detailEl.appendChild(el("div", { class: "slot-detail-name" }, itemNameNodes(it)));
+  detailEl.appendChild(table(["Quality", "Crafter", "Prefab hash"], [[
+    el("td", { class: "mono num", text: String(it.quality) }),
+    el("td", { text: it.crafter_name || "—" }),
+    el("td", { class: "mono", text: `${it.prefab_hash}` }),
+  ]], [0]));
+  detailEl.appendChild(el("div", { class: "slot-detail-fields" }, [
+    el("label", { text: "Stack " }, [numberField(stackInput)]),
+    el("label", { text: " Durability " }, [numberField(durInput)]),
+    el("span", { class: "slot-detail-equipped", text: it.equipped ? "Equipped" : "" }),
+    removeButton(it, writable),
+  ]));
+}
+
+// Repaints just the "adding into slot x,y" indicator, so aiming or clearing
+// it leaves the rest of the add form -- including anything typed -- alone.
+function paintAddTarget(panel, writable = true) {
+  const host = panel.querySelector(".add-target");
+  if (!host) return;
+  host.innerHTML = "";
+  if (!addTargetSlot) return;
+  const clearBtn = el("button", { type: "button", class: "btn-outline", text: "Clear", disabled: !writable });
+  clearBtn.addEventListener("click", () => { addTargetSlot = null; paintAddTarget(panel, writable); });
+  host.appendChild(el("span", { text: `Adding into slot ${addTargetSlot.x},${addTargetSlot.y} ` }));
+  host.appendChild(clearBtn);
+}
+
+function renderAddItemForm(writable, panel) {
   // The prefab name stays the value: it is what `item_add` hashes, and what a
   // user retypes from the CLI or a bug report. The in-game name is the label
-  // because "Bronze Cuirass" is the only half of the pair most players know.
+  // because "Bronze Plate Tunic" is the only half of the pair most players know.
   const options = catalogData.items.map((it) => ({
     value: it.prefab, label: it.display || it.prefab, hint: it.display ? it.prefab : "",
   }));
@@ -615,18 +865,32 @@ function renderAddItemForm(writable) {
       showError("Stack and durability must be valid numbers.");
       return;
     }
-    const ok = submitEdit({ kind: "item_add", name, stack, durability, allow_unknown_item: allowUnknown.checked });
-    if (ok) nameCombo.input.value = "";
+    const spec = { kind: "item_add", name, stack, durability, allow_unknown_item: allowUnknown.checked };
+    // AddItem validates occupancy and bounds itself, so an aimed slot is
+    // passed straight through rather than pre-checked here in a second place.
+    const aimed = addTargetSlot;
+    if (aimed) spec.slot = [aimed.x, aimed.y];
+    // Cleared before submitting, because submitEdit() re-renders on its own:
+    // clearing afterwards would need a second full render just to drop the
+    // indicator. Restored if the add was rejected, so the target isn't lost
+    // on a fixable error.
+    addTargetSlot = null;
+    if (!submitEdit(spec)) {
+      addTargetSlot = aimed;
+      refreshAll();
+    }
   });
 
-  return el("div", { class: "add-item-form" }, [
+  const form = el("div", { class: "add-item-form" }, [
     el("h3", { text: "Add item" }),
     el("label", { text: "Name " }, [nameCombo]),
     el("label", { text: " Stack " }, [numberField(stackInput)]),
     el("label", { text: " Durability " }, [numberField(durInput)]),
     el("label", {}, [allowUnknown, el("span", { text: " allow unknown item" })]),
     addBtn,
+    el("span", { class: "add-target" }),
   ]);
+  return form;
 }
 
 // --- pending-changes panel -------------------------------------------------

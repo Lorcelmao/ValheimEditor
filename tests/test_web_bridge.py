@@ -10,7 +10,7 @@ must never become a second, divergent way to make the same edit.
 import pytest
 
 from fch_editor.edits.character import SetBeard, SetColor, SetGuardianPower, SetName
-from fch_editor.edits.inventory import AddItem, RemoveItem, SetItemField, parse_prefab_hash
+from fch_editor.edits.inventory import AddItem, RemoveItem, SetItemField, grid_size, parse_prefab_hash
 from fch_editor.edits.pipeline import apply_edits
 from fch_editor.edits.skills import ALL, SetSkillLevel
 from fch_editor.load import load_bytes
@@ -56,6 +56,32 @@ def test_item_json_includes_computed_properties_not_just_raw_fields(session):
         assert item["equipped"] == bool(item["flags"] & EQUIPPED)
     assert any(item["equipped"] for item in items), \
         "sample save has no equipped item -- this test can't tell True from a bug that always returns False"
+
+
+def test_inventory_geometry_is_exposed_and_read_from_the_save(session, save, sample_bytes):
+    """A spatial grid needs the save's real dimensions. They are derived in
+    Python (`grid_size` clamps `invrows` to 0-9 and defaults to 4) and shipped
+    in the JSON so the web layer never re-implements that rule -- it can see
+    `uniques` and would be one regex away from a second, drifting copy.
+
+    The sample save's height happens to equal DEFAULT_GRID_HEIGHT, so matching
+    it proves only that the field is present and plausible. The second half
+    changes `invrows` to a value the default can't produce -- that is the part
+    that fails if the geometry is ever hardcoded.
+    """
+    grid = session.preview()["save"]["profile"]["player"]["grid"]
+    width, height = grid_size(save.profile.player)
+    assert (grid["width"], grid["height"]) == (width, height)
+
+    # A fresh session for the second half: `AppState.preview()` caches its
+    # EditResult until an edit invalidates it, so reaching past it to mutate
+    # the profile after a preview has already run would just re-read the cache
+    # and pass no matter what the code does.
+    other = Session()
+    other.open(sample_bytes)
+    player = other._state.save.profile.player
+    player.uniques = [u for u in player.uniques if not u.startswith("invrows ")] + ["invrows 7"]
+    assert other.preview()["save"]["profile"]["player"]["grid"] == {"width": 8, "height": 7}
 
 
 @pytest.mark.parametrize("data", [b"", b"tiny", b"not an fch file, still not a valid envelope"])
