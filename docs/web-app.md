@@ -58,6 +58,24 @@ addressed by slot would be ambiguous and the editor refuses to guess which one y
 Item names show the in-game name with the prefab codename beside it. The prefab name is the real
 identifier — it is what the save stores, what `fch inv add` takes, and what you type to add an item.
 
+## Picking items to add
+
+**Add item** takes a prefab name directly, for when you already know it. **Browse…** opens a picker
+over the whole catalog: search matches either the in-game name or the prefab codename (`tunic` and
+`ArmorBronze` both find Bronze Plate Tunic), sorted by name or by what you've added recently. Select
+several and they are queued as separate edits in one pass.
+
+If some of them don't fit — the inventory has a finite number of slots — the ones that did are kept,
+the picker stays open, and only the items that failed remain selected, so clicking Add again retries
+exactly those rather than adding the successful ones twice.
+
+Typing a name the catalog doesn't know still works, with **allow unknown item** ticked. That matters:
+the bundled catalog can fall behind a game update, and this is how you add something newer than it.
+
+The picker remembers the last 20 items you added, in your browser's local storage, to power the
+"recently used" sort. That list never leaves your machine and is the only thing this app stores; a
+browser that blocks storage loses the convenience and nothing else.
+
 ## What the web app cannot do
 
 Unlike the CLI (`safe_io.py`) and the Tkinter GUI, the browser has no access to your filesystem or

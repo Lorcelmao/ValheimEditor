@@ -855,35 +855,42 @@ function renderAddItemForm(writable, panel) {
   const durInput = el("input", { type: "number", min: "0", step: "any", value: "100", class: "mono", disabled: !writable });
   const allowUnknown = el("input", { type: "checkbox", disabled: !writable });
   const addBtn = el("button", { type: "button", class: "btn-primary", text: "Add item", disabled: !writable });
+  // The typed field stays: it is the fast path for someone who knows the name,
+  // and the only way to add a prefab the catalog has never heard of. The
+  // catalog was 41% behind the game once; a picker that can only offer what it
+  // knows would have made that gap unreachable from the UI.
+  const browseBtn = el("button", { type: "button", class: "btn-outline", text: "Browse…", disabled: !writable });
+  browseBtn.addEventListener("click", () => openItemPicker());
 
-  addBtn.addEventListener("click", () => {
-    const name = nameCombo.input.value.trim();
-    if (!name) { showError("Enter an item name to add."); return; }
+  // Reassigned on every rebuild, and the picker calls it at submit time rather
+  // than capturing it when opened. refreshAll() replaces this whole form after
+  // each edit, so a captured reader would go on returning the values of a
+  // detached form the user can no longer see -- the app's standing rule is that
+  // nothing on screen is stale, and a submit reading invisible values breaks it
+  // in the other direction.
+  readAddFields = () => {
     const stack = parseInt(stackInput.value, 10);
     const durability = parseFloat(durInput.value);
     if (!Number.isInteger(stack) || !Number.isFinite(durability)) {
       showError("Stack and durability must be valid numbers.");
-      return;
+      return null;
     }
-    const spec = { kind: "item_add", name, stack, durability, allow_unknown_item: allowUnknown.checked };
-    // AddItem validates occupancy and bounds itself, so an aimed slot is
-    // passed straight through rather than pre-checked here in a second place.
-    const aimed = addTargetSlot;
-    if (aimed) spec.slot = [aimed.x, aimed.y];
-    // Cleared before submitting, because submitEdit() re-renders on its own:
-    // clearing afterwards would need a second full render just to drop the
-    // indicator. Restored if the add was rejected, so the target isn't lost
-    // on a fixable error.
-    addTargetSlot = null;
-    if (!submitEdit(spec)) {
-      addTargetSlot = aimed;
-      refreshAll();
-    }
+    return { stack, durability, allow_unknown_item: allowUnknown.checked };
+  };
+
+  addBtn.addEventListener("click", () => {
+    const name = nameCombo.input.value.trim();
+    if (!name) { showError("Enter an item name to add."); return; }
+    const fields = readAddFields();
+    if (!fields) return;
+    const { failed } = addItems([name], fields);
+    if (failed.length === 0) rememberRecentItems([name]);
   });
 
   const form = el("div", { class: "add-item-form" }, [
     el("h3", { text: "Add item" }),
     el("label", { text: "Name " }, [nameCombo]),
+    browseBtn,
     el("label", { text: " Stack " }, [numberField(stackInput)]),
     el("label", { text: " Durability " }, [numberField(durInput)]),
     el("label", {}, [allowUnknown, el("span", { text: " allow unknown item" })]),
@@ -891,6 +898,346 @@ function renderAddItemForm(writable, panel) {
     el("span", { class: "add-target" }),
   ]);
   return form;
+}
+
+// Adds N items as N independent `item_add` edits -- which is exactly what they
+// are: `edit_key` never dedups AddItem, so each one stands on its own.
+//
+// They can also fail independently: the inventory has a finite number of slots
+// and AddItem rejects the add when none is free. A partial batch keeps its
+// successes -- the user asked for them, and discarding them silently would be
+// worse than a partial result.
+//
+// Returns `{added, failed}` rather than a bare boolean, and the distinction
+// matters: the caller has to know *which* items failed. Telling it only that
+// "something failed" leaves the successes still selected, and since AddItem is
+// never deduped, one retry would add them a second time -- silent duplicate
+// items in someone's save.
+function addItems(names, fields) {
+  const aimed = addTargetSlot;
+  addTargetSlot = null;
+  const failed = [];
+  const added = [];
+  try {
+    for (const [i, name] of names.entries()) {
+      const spec = { kind: "item_add", name, ...fields };
+      // An aimed slot is one slot, so it can only take the first item; the rest
+      // go wherever there is room. AddItem validates occupancy and bounds
+      // itself, so the slot is passed straight through rather than
+      // pre-validated here in a second place.
+      if (aimed && i === 0) spec.slot = [aimed.x, aimed.y];
+      const result = toJsObj(session.add_edit(pyodide.toPy(spec)));
+      if (result.ok) added.push(name);
+      else failed.push({ index: i, name, error: result.error });
+    }
+    if (failed.length === 0) clearError();
+    else if (names.length === 1) showError(failed[0].error);
+    else showError(summarizeFailures(added.length, names.length, failed));
+    // The aimed slot only ever belonged to the first item, so it is still
+    // unused exactly when *that* add failed -- not when the batch as a whole
+    // partly failed.
+    if (aimed && failed.some((f) => f.index === 0)) addTargetSlot = aimed;
+  } finally {
+    // In a finally block because add_edit throwing mid-batch would otherwise
+    // leave the edits already committed to the session invisible on screen --
+    // under-reporting changes that a Save would still write.
+    refreshAll();
+  }
+  return { added, failed };
+}
+
+// Names what failed, not just how many: "2 skipped" leaves the user to guess
+// which two out of a multi-item batch. Distinct reasons are listed separately,
+// since "no free slot" and "unknown prefab" need different responses.
+function summarizeFailures(addedCount, total, failed) {
+  const byError = new Map();
+  for (const f of failed) {
+    if (!byError.has(f.error)) byError.set(f.error, []);
+    byError.get(f.error).push(f.name);
+  }
+  const parts = [...byError].map(([error, names]) => `${names.join(", ")} — ${error}`);
+  return `${addedCount} of ${total} added. Skipped: ${parts.join("; ")}`;
+}
+
+// --- item picker -----------------------------------------------------------
+// A browsable grid over the whole catalog, for the times you don't already
+// know that the thing you want is spelled `ArmorBronzeChest`.
+//
+// Lives in a <dialog> appended to <body>, built once: the add form it belongs
+// to is rebuilt by refreshAll() after every edit, so a picker parented inside
+// that panel would be destroyed mid-use.
+
+const RECENT_KEY = "fch-editor.recent-items";
+const RECENT_MAX = 20;
+// Cap on rendered cards. Browsing 1,164 look-alike cards is not a real
+// workflow -- searching is -- and a cap keeps the DOM small enough that
+// typing stays responsive without hand-rolling a virtual scroller.
+const PICKER_RENDER_CAP = 300;
+
+let pickerDialog = null;
+let pickerSelection = new Set();  // prefab names
+let pickerSort = "name";          // "name" | "recent"
+let pickerHaystacks = null;       // lowercased "<display> <prefab>", built once
+let pickerLastBatchSize = 0;      // how many were submitted, for the failure summary
+// Set by renderAddItemForm on every rebuild; called at submit time, never
+// captured, so the picker can't submit values from a form the user can no
+// longer see.
+let readAddFields = () => null;
+
+// Most-recently-used prefab names. Browser storage throws outright in some
+// privacy modes, and what's stored can go stale when the catalog changes, so
+// every read is guarded and filtered against the live catalog -- a recents
+// list that quietly doesn't persist is fine; one that breaks the picker is not.
+function readRecentItems() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(RECENT_KEY));
+    if (!Array.isArray(raw)) return [];
+    const known = new Set(catalogData.items.map((it) => it.prefab));
+    return raw.filter((n) => typeof n === "string" && known.has(n)).slice(0, RECENT_MAX);
+  } catch {
+    return [];
+  }
+}
+
+function rememberRecentItems(names) {
+  try {
+    const merged = [...names, ...readRecentItems()];
+    localStorage.setItem(RECENT_KEY, JSON.stringify([...new Set(merged)].slice(0, RECENT_MAX)));
+  } catch {
+    // Storage unavailable or full: recents are a convenience, never a
+    // precondition for adding an item.
+  }
+}
+
+// The whole filter/sort pipeline as one function, so what the grid shows is
+// decided in one readable place. Pure: no DOM, no globals -- `haystacks` is a
+// parameter precisely because it must stay index-aligned with `entries`, and
+// reaching for the module-level copy would quietly couple the two.
+function pickerResults(entries, haystacks, query, sort, recent) {
+  const q = query.trim().toLowerCase();
+  let out = entries;
+  if (q) {
+    out = [];
+    for (const [i, hay] of haystacks.entries()) {
+      if (hay.includes(q)) out.push(entries[i]);
+    }
+  }
+  const byName = (a, b) => (a.display || a.prefab).localeCompare(b.display || b.prefab, undefined, { sensitivity: "base" });
+  if (sort === "recent") {
+    const rank = new Map(recent.map((n, i) => [n, i]));
+    return out.slice().sort((a, b) => {
+      const ra = rank.has(a.prefab) ? rank.get(a.prefab) : Infinity;
+      const rb = rank.has(b.prefab) ? rank.get(b.prefab) : Infinity;
+      // Recents first, in use order; everything else keeps the name order, so
+      // the list is never truncated to just the recents.
+      return ra === rb ? byName(a, b) : ra - rb;
+    });
+  }
+  return out.slice().sort(byName);
+}
+
+function openItemPicker() {
+  if (!pickerDialog) pickerDialog = buildItemPicker();
+  // Opens clean: selection and search reset together. Keeping one and dropping
+  // the other is the confusing half-state -- a search box reading "bronze" over
+  // a selection that no longer exists.
+  pickerSelection = new Set();
+  pickerDialog.querySelector(".picker-search").value = "";
+  pickerDialog.setFailures([]);
+  pickerDialog.refresh();
+  pickerDialog.showModal();
+  pickerDialog.querySelector(".picker-search").focus();
+}
+
+function buildItemPicker() {
+  const dialog = el("dialog", { id: "item-picker", "aria-label": "Choose items to add" });
+  const search = el("input", {
+    type: "search", class: "picker-search", placeholder: "Search by name or prefab, e.g. tunic or ArmorBronze",
+    "aria-label": "Search items", autocomplete: "off",
+  });
+  const count = el("p", { class: "picker-count", "aria-live": "polite" });
+  const grid = el("div", { class: "picker-grid", role: "listbox", "aria-multiselectable": "true", "aria-label": "Catalog items" });
+  // Sibling of the grid, not a child: a listbox may only contain options, and
+  // a paragraph inside one is commonly not announced at all -- which would hide
+  // exactly the text explaining the unknown-item escape hatch from the users
+  // most dependent on it.
+  const emptyNote = el("p", { class: "picker-empty", hidden: true });
+  // The failure report lives INSIDE the dialog. #error-area sits in the page
+  // behind the modal backdrop, unreadable and unreachable while the picker is
+  // open -- and staying open on a partial failure is the entire point.
+  const failureNote = el("div", { class: "picker-failures notice notice-warn", hidden: true, role: "alert" });
+  const selectionInfo = el("span", { class: "picker-selection" });
+  const clearBtn = el("button", { type: "button", class: "btn-outline", text: "Clear" });
+  const addBtn = el("button", { type: "button", class: "btn-primary", text: "Add selected" });
+  const cancelBtn = el("button", { type: "button", class: "btn-outline", text: "Cancel" });
+
+  const sortButtons = [["name", "Name"], ["recent", "Recently used"]].map(([mode, label]) => {
+    const btn = el("button", { type: "button", class: "picker-sort-btn", text: label, "aria-pressed": String(pickerSort === mode) });
+    btn.dataset.mode = mode;
+    btn.addEventListener("click", () => { pickerSort = mode; dialog.refresh(); });
+    return btn;
+  });
+
+  // Rebuilt from the pipeline on every keystroke/sort change. The catalog
+  // itself is fetched once per session and never changes, so only the view is
+  // recomputed here.
+  dialog.refresh = () => {
+    if (pickerHaystacks === null) {
+      // Lowercased once, not per keystroke: 1,164 entries x 2 fields is enough
+      // string work to feel while typing.
+      pickerHaystacks = catalogData.items.map((it) => `${it.display || ""} ${it.prefab}`.toLowerCase());
+    }
+    for (const btn of sortButtons) btn.setAttribute("aria-pressed", String(pickerSort === btn.dataset.mode));
+    const results = pickerResults(catalogData.items, pickerHaystacks, search.value, pickerSort, readRecentItems());
+    const shown = results.slice(0, PICKER_RENDER_CAP);
+
+    grid.innerHTML = "";
+    for (const entry of shown) grid.appendChild(buildPickerCard(entry, dialog));
+    const first = grid.querySelector(".picker-card");
+    if (first && !grid.querySelector('.picker-card[tabindex="0"]')) first.tabIndex = 0;
+
+    // Never a blank grid: the typed text is still addable, and saying so is the
+    // difference between "no results" and a dead end.
+    emptyNote.hidden = results.length > 0;
+    if (results.length === 0) {
+      const typed = search.value.trim();
+      emptyNote.textContent = typed
+        ? `Nothing in the catalog matches "${typed}". You can still add it by name with “allow unknown item” ticked — useful for an item from a game version newer than this catalog.`
+        : "No items in the catalog.";
+    }
+    count.textContent = results.length > shown.length
+      ? `${results.length} matches, showing the first ${shown.length} — keep typing to narrow`
+      : `${results.length} item${results.length === 1 ? "" : "s"}`;
+    dialog.paintSelection();
+  };
+
+  dialog.paintSelection = () => {
+    for (const card of grid.querySelectorAll(".picker-card")) {
+      const on = pickerSelection.has(card.dataset.prefab);
+      card.classList.toggle("selected", on);
+      card.setAttribute("aria-selected", String(on));
+    }
+    const n = pickerSelection.size;
+    selectionInfo.textContent = n === 0 ? "Nothing selected" : `${n} selected`;
+    addBtn.textContent = n > 1 ? `Add ${n} items` : "Add selected";
+    addBtn.disabled = n === 0;
+    clearBtn.disabled = n === 0;
+  };
+
+  let searchTimer = null;
+  search.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => dialog.refresh(), 120);
+  });
+  search.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const target = grid.querySelector('.picker-card[tabindex="0"]') || grid.querySelector(".picker-card");
+      if (target) target.focus();
+    }
+  });
+  grid.addEventListener("keydown", (e) => handlePickerKeys(e, grid));
+  clearBtn.addEventListener("click", () => { pickerSelection.clear(); dialog.paintSelection(); });
+  cancelBtn.addEventListener("click", () => dialog.close());
+  dialog.setFailures = (failed) => {
+    failureNote.hidden = failed.length === 0;
+    failureNote.textContent = failed.length === 0 ? "" : summarizeFailures(
+      pickerLastBatchSize - failed.length, pickerLastBatchSize, failed);
+  };
+
+  addBtn.addEventListener("click", () => {
+    // Read at submit time, from whatever form is currently on screen.
+    const fields = readAddFields();
+    if (!fields) return;
+    const names = [...pickerSelection];
+    pickerLastBatchSize = names.length;
+    const { added, failed } = addItems(names, fields);
+    // Only what actually landed becomes "recently used" -- a failed batch must
+    // not evict genuinely-used entries from a 20-slot list.
+    if (added.length > 0) rememberRecentItems(added);
+    if (failed.length === 0) {
+      dialog.setFailures([]);
+      dialog.close();
+      return;
+    }
+    // Keep ONLY the failures selected. Leaving the successes selected would
+    // make the obvious retry add them a second time, since AddItem is never
+    // deduped -- silent duplicates in a save file.
+    pickerSelection = new Set(failed.map((f) => f.name));
+    // Clear the search too, so the still-selected failures are actually on
+    // screen to retry or deselect rather than hidden behind a stale filter.
+    search.value = "";
+    dialog.setFailures(failed);
+    dialog.refresh();
+  });
+
+  dialog.appendChild(el("div", { class: "picker-head" }, [
+    el("h2", { text: "Add items" }),
+    search,
+    el("div", { class: "picker-controls" }, [
+      el("span", { class: "picker-sort-label", text: "Sort" }),
+      ...sortButtons,
+      count,
+    ]),
+    failureNote,
+  ]));
+  dialog.appendChild(grid);
+  dialog.appendChild(emptyNote);
+  dialog.appendChild(el("div", { class: "picker-foot" }, [selectionInfo, clearBtn, addBtn, cancelBtn]));
+  document.body.appendChild(dialog);
+  return dialog;
+}
+
+function buildPickerCard(entry, dialog) {
+  const label = entry.display || entry.prefab;
+  const card = el("button", {
+    type: "button", role: "option", class: "picker-card", "aria-selected": "false", tabindex: "-1",
+    title: entry.display ? `${entry.display} (${entry.prefab})` : entry.prefab,
+  });
+  card.dataset.prefab = entry.prefab;
+  card.appendChild(el("span", { class: "picker-card-name", text: label }));
+  if (entry.display) card.appendChild(el("span", { class: "picker-card-prefab mono", text: entry.prefab }));
+  // A checkmark as well as the border/tint, so selection survives being seen
+  // without colour.
+  card.appendChild(el("span", { class: "picker-check", "aria-hidden": "true", text: "✓" }));
+  card.addEventListener("click", () => {
+    if (pickerSelection.has(entry.prefab)) pickerSelection.delete(entry.prefab);
+    else pickerSelection.add(entry.prefab);
+    dialog.paintSelection();
+  });
+  return card;
+}
+
+// Two-dimensional arrow-key movement over a grid whose column count is a
+// function of the viewport, so it is measured from the laid-out cards rather
+// than assumed. Roving tabindex keeps the grid a single tab stop.
+function handlePickerKeys(e, grid) {
+  const cards = [...grid.querySelectorAll(".picker-card")];
+  const i = cards.indexOf(e.target.closest(".picker-card"));
+  if (i < 0) return;
+  const cols = countPickerColumns(cards);
+  const moves = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -cols, ArrowDown: cols };
+  let next = null;
+  if (e.key in moves) next = i + moves[e.key];
+  else if (e.key === "Home") next = 0;
+  else if (e.key === "End") next = cards.length - 1;
+  else return;
+  e.preventDefault();
+  next = Math.min(cards.length - 1, Math.max(0, next));
+  for (const card of cards) card.tabIndex = -1;
+  cards[next].tabIndex = 0;
+  cards[next].focus();
+}
+
+function countPickerColumns(cards) {
+  if (cards.length === 0) return 1;
+  const top = cards[0].offsetTop;
+  let cols = 0;
+  while (cols < cards.length && cards[cols].offsetTop === top) cols++;
+  // Without a layout engine every offsetTop reads 0, so this collapses to "one
+  // row" and Up/Down become jumps to the ends. Harmless: Left/Right and Home/
+  // End still traverse everything, and any real browser reports real offsets.
+  return Math.max(1, cols);
 }
 
 // --- pending-changes panel -------------------------------------------------
