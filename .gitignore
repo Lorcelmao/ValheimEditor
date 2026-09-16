@@ -123,3 +123,9 @@ release-manifest.json
 web/tests/node_modules/
 web/tests/package-lock.json
 web/tests/.*.undertest.mjs
+
+# Source OTFs for the webfont. The licence permits converting to woff2 and
+# embedding that, but not redistributing the typeface itself -- so the
+# converted web/fonts/*.woff2 is committed and the originals are not.
+# Anchored: a bare "fonts/" would also match web/fonts/ and drop the shipped font.
+/fonts/

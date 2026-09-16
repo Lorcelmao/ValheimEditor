@@ -30,17 +30,26 @@
   --space:  4px;        /* base unit; use multiples */
 
   /* type */
-  --font-display: "Cinzel", Georgia, serif;
+  /* Display is the masthead and nothing else -- see the h1 rule. Norse is a
+     runic-flavoured face with a 0.68 x-height/cap ratio and proportional
+     digits, so it works at 26px and falls apart in a 15px tab label. */
+  --font-display: "Norse", Georgia, serif;
   --font-ui: system-ui, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
 }
 
+/* Norse by Joël Carrouché (1001fonts.com/norse-font.html), free-for-commercial
+   licence. Converted to woff2 and nothing else: that licence permits format
+   conversion and webfont embedding but no other modification, which is also
+   why this is the whole face rather than a Latin subset. It is an independent
+   typeface inspired by futhark, not a game asset -- the project's no-game-assets
+   rule is untouched. */
 @font-face {
-  font-family: "Cinzel";
+  font-family: "Norse";
   font-style: normal;
-  font-weight: 400 900;
+  font-weight: 400;
   font-display: swap;
-  src: url("fonts/cinzel-variable.woff2") format("woff2-variations"), url("fonts/cinzel-variable.woff2") format("woff2");
+  src: url("fonts/norse-regular.woff2") format("woff2");
 }
 
 /* --- reset & base ------------------------------------------------------ */
@@ -70,9 +79,15 @@ body::before {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 
+/* Section headings carry hierarchy with weight, case and tracking rather than
+   a second display face: at 15-18px the UI sans is simply more legible than
+   any decorative face, and one atmospheric moment in the masthead reads as
+   deliberate where five read as costume. */
 h1, h2, h3 {
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   margin: 0;
 }
 
@@ -112,9 +127,14 @@ button, input, select {
   border-bottom: var(--hair) solid var(--border);
 }
 
+/* The one place the display face appears. Larger than the old 20px because
+   Norse earns its keep at display size and only there; uppercase because its
+   lowercase sits low against the caps. */
 .app-bar h1 {
-  font-size: 1.25rem;
-  letter-spacing: 0.02em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.6rem;
+  letter-spacing: 0.06em;
 }
 
 .mono {
@@ -312,8 +332,11 @@ button, input, select {
   background: none;
   border: none;
   padding: 10px 16px;
-  font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--text-muted);
   cursor: pointer;
   border-bottom: 2px solid transparent;
