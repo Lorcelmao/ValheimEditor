@@ -102,7 +102,10 @@ class InventoryTab(ttk.Frame):
         self._selected_slot = None
 
     def _apply_add(self) -> None:
-        name = self.name_var.get().strip()
+        # The box may hold a display label ("Stone Axe (AxeStone)"); the edit
+        # takes the prefab name the save actually hashes. A typed prefab, or a
+        # name from a newer game version than this catalog, resolves to itself.
+        name = self.name_box.resolve()
         if not name:
             self.app.show_error("Enter an item name.")
             return
@@ -140,7 +143,12 @@ class InventoryTab(ttk.Frame):
                 f"{it.x},{it.y}", self._item_label(it), it.stack, f"{it.durability:g}",
                 "yes" if it.equipped else "", it.crafter_name,
             ))
-        self.name_box.set_values(self.app.catalog.names())
+        # Same "Display (Prefab)" shape as the table above, so an item reads
+        # identically wherever it appears and can be found by either name.
+        self.name_box.set_options(
+            (e.prefab, f"{e.display} ({e.prefab})" if e.display and e.display != e.prefab else e.prefab)
+            for e in self.app.catalog.entries()
+        )
 
     def _item_label(self, it) -> str:
         """In-game name with the prefab name in parentheses. Both, because the

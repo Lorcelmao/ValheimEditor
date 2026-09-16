@@ -20,23 +20,46 @@ def set_widgets_state(container: tk.Widget, enabled: bool) -> None:
 
 class AutocompleteCombobox(ttk.Combobox):
     """A Combobox whose dropdown narrows to entries containing what's typed
-    (plain ttk.Combobox only jump-scrolls to a prefix match)."""
+    (plain ttk.Combobox only jump-scrolls to a prefix match).
 
-    def __init__(self, master=None, values: list[str] = (), **kwargs):
+    An entry can show a label that differs from the value it stands for: the
+    item catalog lists "Stone Axe (AxeStone)" because that is the name a player
+    knows, while the edit underneath takes `AxeStone`. Typing matches against
+    either half, and `resolve()` turns whatever is in the box back into a value.
+    """
+
+    def __init__(self, master=None, options=(), **kwargs):
         super().__init__(master, **kwargs)
-        self._all = list(values)
-        self["values"] = self._all
+        self.set_options(options)
         self.bind("<KeyRelease>", self._on_key)
 
-    def set_values(self, values: list[str]) -> None:
-        self._all = list(values)
-        self["values"] = self._all
+    def set_options(self, options) -> None:
+        """`options` are `(value, label)` pairs; a bare string is its own label."""
+        # Not `_options`: tkinter.Misc._options is a real method the toolkit
+        # calls on every configure(), and shadowing it breaks widget creation
+        # with a bare "'list' object is not callable".
+        self._entries = [(o, o) if isinstance(o, str) else tuple(o) for o in options]
+        self._by_label = {label: value for value, label in self._entries}
+        self["values"] = [label for _, label in self._entries]
+
+    def resolve(self) -> str:
+        """The value the box currently means, ready to hand to an edit.
+
+        Anything that isn't one of our labels is returned as typed -- that is
+        what keeps a hand-typed prefab working, including one this catalog has
+        never heard of (the "allow unknown item" path).
+        """
+        text = self.get().strip()
+        return self._by_label.get(text, text)
 
     def _on_key(self, event) -> None:
         if event.keysym in ("Up", "Down", "Left", "Right", "Return", "Escape", "Tab"):
             return
-        typed = self.get()
-        self["values"] = [v for v in self._all if typed.lower() in v.lower()] if typed else self._all
+        typed = self.get().strip().lower()
+        self["values"] = [
+            label for value, label in self._entries
+            if not typed or typed in label.lower() or typed in value.lower()
+        ]
 
 
 class LabeledEntry(ttk.Frame):

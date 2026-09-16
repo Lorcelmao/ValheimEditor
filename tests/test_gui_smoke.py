@@ -129,6 +129,69 @@ def test_inventory_tab_add_unknown_item_needs_opt_in(app_window, sample_copy, au
     assert app_window.state.dirty
 
 
+def test_inventory_add_box_finds_an_item_by_its_in_game_name(app_window, sample_copy):
+    """The table lists "Stone Axe (AxeStone)", so the add box below it has to
+    accept the same string -- otherwise the one name the user can see is the one
+    name they cannot type."""
+    app_window.open_file(sample_copy)
+    inv_tab = app_window.inventory_tab
+    labels = list(inv_tab.name_box["values"])
+    assert "Stone Axe (AxeStone)" in labels
+    # The prefab stays visible in every label, because it is what the save
+    # hashes and what the CLI takes.
+    assert all("(" in label or label.isidentifier() for label in labels[:50])
+
+    inv_tab.name_var.set("Stone Axe (AxeStone)")
+    inv_tab._apply_add()
+    added = [i for i in app_window.state.preview().profile.player.items
+             if i.prefab_hash == stable_hash("AxeStone")]
+    assert len(added) == 2, "the display label should add AxeStone, the prefab it stands for"
+
+
+def test_inventory_add_box_still_takes_a_typed_prefab(app_window, sample_copy):
+    """The label mapping must never get in the way of typing a prefab name --
+    from the CLI, a bug report, or a game version newer than this catalog."""
+    app_window.open_file(sample_copy)
+    inv_tab = app_window.inventory_tab
+    inv_tab.name_var.set("Coins")
+    inv_tab._apply_add()
+    assert any(i.prefab_hash == stable_hash("Coins")
+               for i in app_window.state.preview().profile.player.items)
+
+
+def test_inventory_add_box_narrows_on_either_name(app_window, sample_copy):
+    app_window.open_file(sample_copy)
+    box = app_window.inventory_tab.name_box
+
+    # Tk delivers key events to the focused widget, and this box sits on a
+    # notebook tab that isn't selected -- event_generate would be swallowed and
+    # every assertion below would pass without the filter ever running. So the
+    # handler is called directly, and the wiring that would call it in a real
+    # session is asserted separately.
+    assert box.bind("<KeyRelease>"), "the narrowing handler is no longer bound"
+
+    class _KeyRelease:
+        keysym = "a"
+
+    def narrow_to(text):
+        box.set(text)
+        box._on_key(_KeyRelease())
+        return list(box["values"])
+
+    axe = narrow_to("Stone Axe")
+    assert axe == ["Stone Axe (AxeStone)"], axe
+
+    # The prefab half of the same label. Substring matching, so "AxeStone" also
+    # pulls in "PickaxeStone" -- the same behaviour the web combobox has, and
+    # the reason the prefab stays printed in every label.
+    by_prefab = narrow_to("AxeStone")
+    assert "Stone Axe (AxeStone)" in by_prefab
+    assert all("axestone" in label.lower() for label in by_prefab), by_prefab
+
+    assert narrow_to("zzzznotanitem") == []
+    assert len(narrow_to("")) == len(app_window.catalog.entries())
+
+
 def test_full_round_trip_save_in_place(app_window, sample_copy):
     app_window.open_file(sample_copy)
     app_window.skills_tab.skill_var.set("all")
