@@ -13,11 +13,23 @@ if (-not (Test-Path $pyinstaller)) {
     throw "pyinstaller not found at $pyinstaller -- run: .venv\Scripts\python.exe -m pip install pyinstaller"
 }
 
-& $pyinstaller --noconfirm --onefile --windowed --name fch-editor `
-    --paths "$root\src" `
-    --add-data "$root\src\fch_editor\catalog\data\items.txt;fch_editor\catalog\data" `
-    --distpath "$root\dist" --workpath "$root\build" --specpath "$root\build" `
-    "$root\tools\gui_launcher.py"
+# PyInstaller writes its progress log to stderr, and Windows PowerShell turns
+# any stderr line from a native command into a terminating NativeCommandError
+# while $ErrorActionPreference is 'Stop' -- so the build died on the very first
+# banner line, having built nothing, with an error that looked like a
+# PyInstaller crash rather than a shell artifact. Relax the preference for the
+# call itself; $LASTEXITCODE below is the actual success signal.
+$previousPreference = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+try {
+    & $pyinstaller --noconfirm --onefile --windowed --name fch-editor `
+        --paths "$root\src" `
+        --add-data "$root\src\fch_editor\catalog\data\items.txt;fch_editor\catalog\data" `
+        --distpath "$root\dist" --workpath "$root\build" --specpath "$root\build" `
+        "$root\tools\gui_launcher.py"
+} finally {
+    $ErrorActionPreference = $previousPreference
+}
 if ($LASTEXITCODE -ne 0) { throw "pyinstaller failed with exit code $LASTEXITCODE" }
 
 Write-Output "Built: $root\dist\fch-editor.exe"
