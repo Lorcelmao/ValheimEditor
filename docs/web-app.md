@@ -58,6 +58,10 @@ addressed by slot would be ambiguous and the editor refuses to guess which one y
 Item names show the in-game name with the prefab codename beside it. The prefab name is the real
 identifier — it is what the save stores, what `fch inv add` takes, and what you type to add an item.
 
+Selecting an occupied slot also offers **Copy**, which duplicates that item into a free slot with its
+upgrade level, variant, crafter and any other data intact — not a fresh, un-upgraded copy of the same
+prefab. Not offered on a shared-slot item, for the same reason those can't be edited by slot at all.
+
 ## Picking items to add
 
 **Add item** takes a prefab name directly, for when you already know it. **Browse…** opens a picker

@@ -260,6 +260,41 @@ const enabled = [...panel.querySelectorAll("button, input")]
 check("#6 no enabled control on a read-only save", enabled.length === 0,
   enabled.map((n) => n.textContent || n.type).join(", "));
 
+console.log("\ncopy button");
+submitted.length = 0;
+// A fresh profile: earlier tests reassign the module-level `profile` variable,
+// so this cannot rely on it still containing the Club item used below.
+const copyTestProfile = asProfile({
+  grid: { width: 8, height: 4 },
+  items: [item(2, 1, "Club"), item(0, 0, "First"), item(0, 0, "Second")],  // (0,0) shared, for the overflow check
+});
+app.__set(catalogStub, {
+  open: () => py({ ok: true }),
+  add_edit: (spec) => { submitted.push(spec); return py({ ok: true }); },
+  preview: () => py({ changes: [], diff_text: "", save: { writable: true, reasons: [], warnings: [], profile: copyTestProfile } }),
+  list_pending: () => py([]),
+}, { toPy: (v) => v });
+app.renderInventory(copyTestProfile, true);
+q('.inv-slot[data-x="2"][data-y="1"]')[0].click();  // Club, an ordinary occupied slot
+const detailButtons = () => [...panel.querySelector(".slot-detail").querySelectorAll("button")];
+const copyBtn = () => detailButtons().find((b) => b.textContent === "Copy");
+check("Copy button appears in the detail panel", copyBtn() !== undefined);
+copyBtn().click();
+check("clicking Copy submits an item_copy spec for the selected slot",
+  submitted.length === 1 && submitted[0].kind === "item_copy" && JSON.stringify(submitted[0].slot) === "[2,1]");
+
+// Must never appear on an overflow row: a shared-slot item can't be copied
+// (the backend refuses to guess which one is meant), so offering the button
+// there would be a control that only ever fails -- the same reasoning that
+// already made those rows read-only for Remove.
+const overflowButtons = [...panel.querySelectorAll("table tbody tr")]
+  .flatMap((row) => [...row.querySelectorAll("button")].map((b) => b.textContent));
+check("Copy is absent from the overflow table", !overflowButtons.includes("Copy"), overflowButtons.join(", "));
+
+app.renderInventory(copyTestProfile, false);
+q('.inv-slot[data-x="2"][data-y="1"]')[0].click();
+check("Copy is disabled on a read-only save", copyBtn().disabled === true);
+
 fs.unlinkSync(shimPath);
 console.log(failures === 0 ? "\nALL CHECKS PASSED" : `\n${failures} CHECK(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);

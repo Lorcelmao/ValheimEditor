@@ -58,7 +58,8 @@ class InventoryTab(ttk.Frame):
         ttk.Label(edit_form, text="Durability:").grid(row=0, column=2, padx=4)
         ttk.Entry(edit_form, textvariable=self.durability_var, width=10).grid(row=0, column=3)
         ttk.Button(edit_form, text="Apply", command=self._apply_set).grid(row=0, column=4, padx=8)
-        ttk.Button(edit_form, text="Remove", command=self._apply_remove).grid(row=0, column=5)
+        ttk.Button(edit_form, text="Copy", command=self._apply_copy).grid(row=0, column=5, padx=(0, 8))
+        ttk.Button(edit_form, text="Remove", command=self._apply_remove).grid(row=0, column=6)
         edit_form.pack(side="bottom", fill="x", padx=8, pady=(0, 8))
 
         self.tree = ttk.Treeview(self, columns=_COLUMNS, show="headings", selectmode="browse", height=10)
@@ -100,6 +101,16 @@ class InventoryTab(ttk.Frame):
             return
         self.app.apply_edit(inv.RemoveItem(self._selected_slot))
         self._selected_slot = None
+
+    def _apply_copy(self) -> None:
+        if self._selected_slot is None:
+            self.app.show_error("Select an item first.")
+            return
+        # Selection stays on the source slot (unlike Remove, which clears it):
+        # the item is still there, so "copy three times" works without
+        # re-selecting between clicks. Failures (a full inventory) surface via
+        # app.apply_edit()'s own EditError handling, same as every other edit.
+        self.app.apply_edit(inv.CopyItem(self._selected_slot))
 
     def _apply_add(self) -> None:
         # The box may hold a display label ("Stone Axe (AxeStone)"); the edit

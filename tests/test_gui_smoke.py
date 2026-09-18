@@ -9,6 +9,7 @@ import tkinter as tk
 
 import pytest
 
+from fch_editor import model
 from fch_editor.load import load_file
 from fch_editor.stable_hash import stable_hash
 
@@ -114,6 +115,45 @@ def test_inventory_tab_select_set_and_remove(app_window, sample_copy):
     _select_slot(inv_tab, "4,2")
     inv_tab._apply_remove()
     assert (4, 2) not in {(i.x, i.y) for i in app_window.state.preview().profile.player.items}
+
+
+def test_inventory_tab_copy_preserves_quality_and_stays_selected(app_window, sample_copy):
+    app_window.open_file(sample_copy)
+    inv_tab = app_window.inventory_tab
+    # Mutate the baseline (state.save.profile), not preview()'s result:
+    # preview() caches a deepcopy that add() throws away on the next edit, so
+    # mutating that cached copy would be invisible to the edit CopyItem
+    # actually applies against.
+    baseline_player = app_window.state.save.profile.player
+    source = next(i for i in baseline_player.items if (i.x, i.y) == (4, 2))
+    # Set to a non-default value first: quality defaults to 1, so leaving it
+    # untouched would let a naive AddItem-style copy (which resets quality to
+    # 1) pass this assertion by accident.
+    source.quality = 3
+    source.flags |= model.HAS_QUALITY
+    before_count = len(baseline_player.items)
+    before_slots = {(it.x, it.y) for it in baseline_player.items}
+
+    _select_slot(inv_tab, "4,2")
+    inv_tab._apply_copy()
+
+    after = app_window.state.preview().profile.player
+    assert len(after.items) == before_count + 1
+    new_items = [i for i in after.items if (i.x, i.y) not in before_slots]
+    assert len(new_items) == 1
+    assert new_items[0].prefab_hash == source.prefab_hash
+    assert new_items[0].stack == source.stack
+    assert new_items[0].quality == 3
+    # Unlike Remove, Copy leaves the source selected -- repeat copies need no re-selection.
+    assert inv_tab._selected_slot == (4, 2)
+
+
+def test_inventory_tab_copy_without_a_selection_reports_cleanly(app_window, sample_copy, auto_confirm):
+    app_window.open_file(sample_copy)
+    inv_tab = app_window.inventory_tab
+    inv_tab._selected_slot = None
+    inv_tab._apply_copy()
+    assert any("Select an item first" in e for e in auto_confirm)
 
 
 def test_inventory_tab_add_unknown_item_needs_opt_in(app_window, sample_copy, auto_confirm):

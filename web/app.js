@@ -789,6 +789,15 @@ function removeButton(it, writable) {
   return btn;
 }
 
+// Detail-panel only, never on an overflow row: a shared-slot item can't be
+// copied (the backend refuses to guess which one is meant, same as Remove),
+// so offering the button there would be another control that only ever fails.
+function copyButton(it, writable) {
+  const btn = el("button", { type: "button", class: "btn-outline", text: "Copy", disabled: !writable });
+  btn.addEventListener("click", () => submitEdit({ kind: "item_copy", slot: [it.x, it.y] }));
+  return btn;
+}
+
 // The slot is too small to show everything; this box shows all of it. Filled
 // in place rather than rebuilt with the panel, so selecting a slot doesn't
 // disturb anything else on the tab.
@@ -826,6 +835,7 @@ function fillSlotDetail(detailEl, byCoord, writable, panel) {
     el("label", { text: "Stack " }, [numberField(stackInput)]),
     el("label", { text: " Durability " }, [numberField(durInput)]),
     el("span", { class: "slot-detail-equipped", text: it.equipped ? "Equipped" : "" }),
+    copyButton(it, writable),
     removeButton(it, writable),
   ]));
 }

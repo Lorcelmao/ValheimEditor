@@ -10,7 +10,7 @@ must never become a second, divergent way to make the same edit.
 import pytest
 
 from fch_editor.edits.character import SetBeard, SetColor, SetGuardianPower, SetName
-from fch_editor.edits.inventory import AddItem, RemoveItem, SetItemField, grid_size, parse_prefab_hash
+from fch_editor.edits.inventory import AddItem, CopyItem, RemoveItem, SetItemField, grid_size, parse_prefab_hash
 from fch_editor.edits.pipeline import apply_edits
 from fch_editor.edits.skills import ALL, SetSkillLevel
 from fch_editor.load import load_bytes
@@ -147,6 +147,24 @@ def test_item_field_and_remove_match_the_equivalent_dataclass_edits(session, sav
     assert r2.add_edit({"kind": "item_remove", "slot": [x, y]})["ok"] is True
     expected2 = apply_edits(save, [RemoveItem((x, y))])
     assert r2.result_bytes() == expected2.data
+
+
+def test_item_copy_matches_the_equivalent_dataclass_edit(session, save):
+    slot = save.profile.player.items[0]
+    x, y = slot.x, slot.y
+    r = Session()
+    r.open(save.original)
+    assert r.add_edit({"kind": "item_copy", "slot": [x, y]})["ok"] is True
+    expected = apply_edits(save, [CopyItem((x, y))])
+    assert r.result_bytes() == expected.data
+
+
+def test_item_copy_is_never_deduped(session):
+    slot = session._state.save.profile.player.items[0]
+    x, y = slot.x, slot.y
+    assert session.add_edit({"kind": "item_copy", "slot": [x, y]})["ok"] is True
+    assert session.add_edit({"kind": "item_copy", "slot": [x, y]})["ok"] is True
+    assert len(session.list_pending()) == 2
 
 
 def test_two_partial_item_field_edits_for_the_same_slot_replace_not_merge(session):

@@ -22,7 +22,7 @@ from ..catalog.items import ItemCatalog
 from ..diffing import diff
 from ..edits.character import (SetBeard, SetColor, SetGuardianCooldown, SetGuardianPower, SetHair,
                                SetModel, SetName, parse_guardian_power)
-from ..edits.inventory import DEFAULT_DURABILITY, AddItem, RemoveItem, SetItemField, parse_prefab_hash
+from ..edits.inventory import DEFAULT_DURABILITY, AddItem, CopyItem, RemoveItem, SetItemField, parse_prefab_hash
 from ..edits.pipeline import preview_edits
 from ..edits.skills import SetSkillLevel, parse_skill
 from ..edits.state import AppState
@@ -86,6 +86,10 @@ def _build_item_remove(spec: dict) -> RemoveItem:
     return RemoveItem(_slot(spec))
 
 
+def _build_item_copy(spec: dict) -> CopyItem:
+    return CopyItem(_slot(spec))
+
+
 def _build_item_add(spec: dict, catalog: ItemCatalog) -> AddItem:
     name = spec["name"]
     if name not in catalog and not spec.get("allow_unknown_item", False):
@@ -116,6 +120,7 @@ _BUILDERS = {
     "guardian_cooldown": lambda spec: SetGuardianCooldown(spec["seconds"]),
     "item_field": _build_item_field,
     "item_remove": _build_item_remove,
+    "item_copy": _build_item_copy,
 }
 
 

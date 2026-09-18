@@ -85,6 +85,123 @@ class TestRemoveItem:
             apply_edits(save, [inv.RemoveItem((7, 7))])
 
 
+class TestCopyItem:
+    def test_copies_prefab_stack_and_durability(self, save):
+        source = _items(save.profile)[(4, 2)]  # a real item with a non-1 stack in the sample
+        result = apply_edits(save, [inv.CopyItem((4, 2))])
+        out = load_bytes(result.data).profile
+        new = [i for (x, y), i in _items(out).items() if (x, y) not in _items(save.profile)]
+        assert len(new) == 1
+        copy = new[0]
+        assert copy.prefab_hash == source.prefab_hash
+        assert copy.stack == source.stack
+        assert copy.durability_x100 == source.durability_x100
+
+    def test_quality_survives_the_copy_and_a_decode_round_trip(self, save):
+        # The headline case: AddItem alone would silently reset this to 1.
+        profile = save.profile
+        item = _items(profile)[(4, 2)]
+        item.quality = 3
+        item.flags |= model.HAS_QUALITY
+        result = apply_edits(save, [inv.CopyItem((4, 2))])
+        out = load_bytes(result.data).profile  # re-decoded, not the in-memory object
+        new = [i for (x, y), i in _items(out).items() if (x, y) not in _items(save.profile)]
+        assert len(new) == 1
+        assert new[0].quality == 3
+        assert new[0].flags & model.HAS_QUALITY
+
+    def test_variant_custom_data_world_level_and_extra_flags_survive(self, save):
+        profile = save.profile
+        item = _items(profile)[(4, 2)]
+        item.variant = 2
+        item.flags |= model.HAS_VARIANT
+        item.custom_data = [("origin", "quest")]
+        item.flags |= model.HAS_CUSTOM_DATA
+        item.world_level = 5
+        item.extra_flags = 0x12  # u8-encoded; not 0x1234, which overflows the field
+        result = apply_edits(save, [inv.CopyItem((4, 2))])
+        out = load_bytes(result.data).profile
+        new = [i for (x, y), i in _items(out).items() if (x, y) not in _items(save.profile)]
+        assert len(new) == 1
+        copy = new[0]
+        assert copy.variant == 2 and copy.flags & model.HAS_VARIANT
+        assert copy.custom_data == [("origin", "quest")] and copy.flags & model.HAS_CUSTOM_DATA
+        assert copy.world_level == 5
+        assert copy.extra_flags == 0x12
+
+    def test_crafter_of_the_original_survives_not_the_current_character(self, save):
+        profile = save.profile
+        item = _items(profile)[(4, 2)]
+        item.crafter_id = 999999
+        item.crafter_name = "SomeoneElse"
+        item.flags |= model.HAS_CRAFTER
+        result = apply_edits(save, [inv.CopyItem((4, 2))])
+        out = load_bytes(result.data).profile
+        new = [i for (x, y), i in _items(out).items() if (x, y) not in _items(save.profile)]
+        assert new[0].crafter_id == 999999 and new[0].crafter_name == "SomeoneElse"
+
+    def test_copy_of_an_equipped_item_is_not_equipped(self, save):
+        profile = save.profile
+        item = _items(profile)[(0, 3)]  # ArmorRagsChest, equipped in the sample
+        assert item.flags & model.EQUIPPED
+        result = apply_edits(save, [inv.CopyItem((0, 3))])
+        out = load_bytes(result.data).profile
+        source_after = _items(out)[(0, 3)]
+        new = [i for (x, y), i in _items(out).items() if (x, y) not in _items(save.profile)]
+        assert len(new) == 1
+        assert not new[0].flags & model.EQUIPPED
+        assert source_after.flags & model.EQUIPPED  # the original is untouched
+
+    def test_source_is_not_mutated_by_a_later_change_to_the_copy(self, save):
+        # Proves deepcopy, not aliasing: custom_data is a list, so a shallow
+        # copy would let mutating the new item's list also mutate the source's.
+        profile = save.profile
+        item = _items(profile)[(4, 2)]
+        item.custom_data = [("k", "v")]
+        item.flags |= model.HAS_CUSTOM_DATA
+        result = apply_edits(save, [inv.CopyItem((4, 2))])
+        out = load_bytes(result.data).profile
+        new = [i for (x, y), i in _items(out).items() if (x, y) not in _items(save.profile)][0]
+        new.custom_data.append(("k2", "v2"))
+        assert _items(out)[(4, 2)].custom_data == [("k", "v")]
+
+    def test_lands_in_the_first_free_slot(self, save):
+        result = apply_edits(save, [inv.CopyItem((4, 2))])
+        new = [(x, y) for (x, y) in _items(load_bytes(result.data).profile) if (x, y) not in _items(save.profile)]
+        assert new == [(7, 0)]  # first empty slot in row-major order, same as AddItem's default
+
+    def test_missing_slot_rejected(self, save):
+        with pytest.raises(EditError, match="no item at slot"):
+            apply_edits(save, [inv.CopyItem((7, 7))])
+
+    def test_full_inventory_rejected(self, save):
+        edits = []
+        occupied = {(i.x, i.y) for i in save.profile.player.items}
+        for y in range(4):
+            for x in range(8):
+                if (x, y) not in occupied:
+                    edits.append(inv.AddItem("Wood", WOOD, slot=(x, y)))
+        result = apply_edits(save, edits)
+        with pytest.raises(EditError, match="full"):
+            apply_edits(load_bytes(result.data), [inv.CopyItem((4, 2))])
+
+    def test_shared_slot_source_is_refused_not_guessed(self, save):
+        profile = save.profile
+        extra = model.Item(9999, 4, 2, 0, model.HAS_PREFAB, prefab_hash=WOOD)
+        profile.player.items.append(extra)
+        with pytest.raises(EditError, match="2 items occupy slot 4,2"):
+            inv.CopyItem((4, 2)).apply(profile)
+
+    def test_two_copies_in_a_row_produce_two_items(self, save):
+        result = apply_edits(save, [inv.CopyItem((4, 2)), inv.CopyItem((4, 2))])
+        new = [(x, y) for (x, y) in _items(load_bytes(result.data).profile) if (x, y) not in _items(save.profile)]
+        assert len(new) == 2
+
+    def test_never_deduped_against_itself(self):
+        from fch_editor.edits.dedup import edit_key
+        assert edit_key(inv.CopyItem((4, 2))) is None
+
+
 class TestAddItem:
     def test_first_free_slot_row_major(self, save):
         result = apply_edits(save, [inv.AddItem("Wood", WOOD)])

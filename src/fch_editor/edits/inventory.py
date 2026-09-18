@@ -6,11 +6,12 @@ an unrecognised prefab hash are always safe to list, move past, or remove —
 only *adding* a name needs it to resolve to a real prefab, because the game
 deletes an item whose hash it does not recognise on load.
 """
+import copy
 import math
 from dataclasses import dataclass
 
 from ..errors import EditError
-from ..model import HAS_CRAFTER, HAS_PREFAB, HAS_STACK, PICKED_UP, Item, PlayerData, Profile
+from ..model import EQUIPPED, HAS_CRAFTER, HAS_PREFAB, HAS_STACK, PICKED_UP, Item, PlayerData, Profile
 from ..stable_hash import stable_hash
 
 GRID_WIDTH = 8
@@ -121,6 +122,33 @@ class RemoveItem:
         item = _find(player, self.slot)
         player.items.remove(item)
         return ["player.items.count", _scope(self.slot)]
+
+
+@dataclass
+class CopyItem:
+    """Duplicate the item at `slot` into the first free slot, keeping what makes
+    it that item -- upgrade level, variant, crafter, custom data -- rather than
+    the pristine level-1 item AddItem alone would produce."""
+
+    slot: tuple[int, int]
+
+    def apply(self, profile: Profile) -> list[str]:
+        player = _player(profile)
+        source = _find(player, self.slot)  # raises the existing not-found/ambiguous-slot errors
+        width, height = grid_size(player)
+        free = _find_free_slot(player.items, width, height)  # raises the existing "inventory is full"
+        # A deep copy, not a field-by-field reconstruction: `custom_data` is a
+        # list and `flags` decides which optional fields the encoder writes
+        # (see model.py's Item docstring), so copying both wholesale is what
+        # keeps them paired correctly and carries any field Item gains later.
+        item = copy.deepcopy(source)
+        item.x, item.y = free
+        # Two items flagged EQUIPPED for one slot type is a state the game does
+        # not produce; PICKED_UP stays, since the copy is genuinely in the
+        # inventory.
+        item.flags &= ~EQUIPPED
+        player.items.append(item)
+        return ["player.items.count", _scope(free)]
 
 
 @dataclass
