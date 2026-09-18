@@ -29,7 +29,8 @@ def cmd_list(args) -> int:
 
 
 def cmd_set(args) -> int:
-    edit = inv.SetItemField(inv.parse_slot(args.slot), stack=args.stack, durability=args.durability)
+    edit = inv.SetItemField(inv.parse_slot(args.slot), stack=args.stack, durability=args.durability,
+                            quality=args.quality)
     return run_edits(args, [edit])
 
 
@@ -62,11 +63,13 @@ def register(sub) -> None:
     p.add_argument("file", type=Path)
     p.set_defaults(func=cmd_list)
 
-    p = inv_p.add_parser("set", help="change stack and/or durability of the item at a slot")
+    p = inv_p.add_parser("set", help="change stack, durability and/or quality of the item at a slot")
     p.add_argument("file", type=Path)
     p.add_argument("--slot", required=True, metavar="X,Y", help="grid position, e.g. 3,0")
     p.add_argument("--stack", type=int, metavar="N", help="new stack size (1-65535)")
     p.add_argument("--durability", type=float, metavar="D", help="new durability (as shown by 'fch info')")
+    p.add_argument("--quality", type=int, metavar="Q",
+                   help="new upgrade level, 1 or more (no upper limit: the Forge of Potential goes past the old max of 4)")
     add_write_options(p)
     p.set_defaults(func=cmd_set)
 

@@ -207,7 +207,8 @@ const outsideRow = rows.find((r) => r.textContent.includes("FarOut"));
 check("#3 shared-slot row offers no editable controls", sharedRow.querySelectorAll("input, button").length === 0);
 check("#3 shared-slot row says why", sharedRow.textContent.includes("shared slot"));
 check("#3 out-of-grid row IS still editable",
-  outsideRow.querySelectorAll("input").length === 2 && outsideRow.querySelector("button") !== null);
+  // stack, durability, quality
+  outsideRow.querySelectorAll("input").length === 3 && outsideRow.querySelector("button") !== null);
 check("#3 notice explains both cases", panel.querySelector(".notice-warn").textContent.includes("cannot be edited"));
 
 // #4 selecting a slot must not wipe a half-typed add form.
@@ -294,6 +295,84 @@ check("Copy is absent from the overflow table", !overflowButtons.includes("Copy"
 app.renderInventory(copyTestProfile, false);
 q('.inv-slot[data-x="2"][data-y="1"]')[0].click();
 check("Copy is disabled on a read-only save", copyBtn().disabled === true);
+
+console.log("\nquality editing");
+const qualityProfile = asProfile({
+  grid: { width: 8, height: 4 },
+  items: [item(2, 1, "Club", { quality: 2 }), item(9, 9, "FarOut", { quality: 3 })],
+});
+app.__set(catalogStub, {
+  open: () => py({ ok: true }),
+  add_edit: (spec) => { submitted.push(spec); return py({ ok: true }); },
+  preview: () => py({ changes: [], diff_text: "", save: { writable: true, reasons: [], warnings: [], profile: qualityProfile } }),
+  list_pending: () => py([]),
+}, { toPy: (v) => v });
+app.renderInventory(qualityProfile, true);
+q('.inv-slot[data-x="2"][data-y="1"]')[0].click();
+const detailInputs = () => panel.querySelector(".slot-detail").querySelectorAll("input[type=number]");
+check("Quality field appears in the detail panel", detailInputs().length === 3);
+const [stackField, , qualityField] = detailInputs();
+check("Quality field has no upper cap (unlike Stack, which legitimately has one)",
+  !qualityField.max && stackField.max === "65535");
+check("hint about the Forge of Potential is shown",
+  panel.querySelector(".slot-detail").textContent.includes("Forge of Potential"));
+
+// Combined commit: changing ONE field must still send the CURRENT value of
+// every field, never a stale/default one -- a later commit that dropped an
+// already-edited field would silently replace it (edit_key dedups
+// SetItemField by slot alone, replace-not-merge, a bug this project already
+// shipped once).
+submitted.length = 0;
+qualityField.value = "9";
+qualityField.dispatchEvent(new window.Event("change", { bubbles: true }));
+check("editing quality sends a combined item_field spec",
+  submitted.length === 1 && submitted[0].kind === "item_field"
+  && submitted[0].quality === 9 && submitted[0].stack === 1 && typeof submitted[0].durability === "number",
+  JSON.stringify(submitted[0]));
+
+submitted.length = 0;
+stackField.value = "5";
+stackField.dispatchEvent(new window.Event("change", { bubbles: true }));
+check("editing stack still carries the just-edited quality along, not the stale original",
+  submitted.length === 1 && submitted[0].stack === 5 && submitted[0].quality === 9,
+  JSON.stringify(submitted[0]));
+
+submitted.length = 0;
+qualityField.value = "0";
+qualityField.dispatchEvent(new window.Event("change", { bubbles: true }));
+check("quality below 1 is rejected client-side, nothing submitted", submitted.length === 0);
+
+// parseInt("1e3") is 1 and parseInt("7.5") is 7, and both pass Number.isInteger:
+// a typed value used to be silently truncated. Quality has no cap to nudge
+// anyone toward plain digits, so "1e3" quietly becoming quality 1 mattered.
+for (const typed of ["1e3", "7.5", "0x10", "3abc"]) {
+  submitted.length = 0;
+  qualityField.value = typed;
+  qualityField.dispatchEvent(new window.Event("change", { bubbles: true }));
+  check(`typed "${typed}" is rejected, not truncated`, submitted.length === 0, JSON.stringify(submitted[0]));
+}
+submitted.length = 0;
+qualityField.value = "12";
+qualityField.dispatchEvent(new window.Event("change", { bubbles: true }));
+// (No whitespace case: a type="number" input sanitizes " 12 " to "" per the HTML
+// spec, so whitespace can never reach the parser. "1e3" and "7.5" above ARE valid
+// number-input values, which is exactly why they were getting through.)
+check("a plain whole number is still accepted by the strict parser",
+  submitted.length === 1 && submitted[0].quality === 12, JSON.stringify(submitted[0]));
+
+// The overflow table gets the same Quality column and the same combined commit.
+const overflowRow = [...panel.querySelectorAll("table tbody tr")].find((r) => r.textContent.includes("FarOut"));
+check("overflow row has a Quality input", overflowRow.querySelectorAll("input").length === 3);
+submitted.length = 0;
+const overflowQualityInput = overflowRow.querySelectorAll("input")[2];
+overflowQualityInput.value = "7";
+overflowQualityInput.dispatchEvent(new window.Event("change", { bubbles: true }));
+check("overflow row's quality edit is also combined",
+  submitted.length === 1 && submitted[0].quality === 7 && submitted[0].stack === 1, JSON.stringify(submitted[0]));
+
+app.renderInventory(qualityProfile, false);
+q('.inv-slot[data-x="2"][data-y="1"]')[0].click();
+check("Quality is disabled on a read-only save", [...detailInputs()].every((n) => n.disabled));
 
 fs.unlinkSync(shimPath);
 console.log(failures === 0 ? "\nALL CHECKS PASSED" : `\n${failures} CHECK(S) FAILED`);

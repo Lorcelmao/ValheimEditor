@@ -62,6 +62,14 @@ Selecting an occupied slot also offers **Copy**, which duplicates that item into
 upgrade level, variant, crafter and any other data intact — not a fresh, un-upgraded copy of the same
 prefab. Not offered on a shared-slot item, for the same reason those can't be edited by slot at all.
 
+The panel also lets you edit an item's **Quality** (its upgrade level) alongside stack and durability.
+There is deliberately **no upper limit**: the old vanilla maximum of 4 stopped being a real rule when
+the Ashlands Forge of Potential began pushing items past it, and no confirmed ceiling exists. The only
+enforced bounds are a floor of 1 and the save format's own 65,535 storage limit. One caveat worth
+knowing: this editor stores the number you give it and nothing more, so it cannot promise that an
+extreme value (say, 500) behaves sensibly in every stat formula of the game — verifying that would mean
+decompiling the current game version, which this project hasn't done.
+
 ## Picking items to add
 
 **Add item** takes a prefab name directly, for when you already know it. **Browse…** opens a picker

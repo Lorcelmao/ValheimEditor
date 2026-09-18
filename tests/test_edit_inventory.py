@@ -70,6 +70,36 @@ class TestSetItemField:
         with pytest.raises(EditError, match="at least one"):
             inv.SetItemField((0, 0))
 
+    def test_quality_persists_and_sets_the_flag(self, save):
+        result = apply_edits(save, [inv.SetItemField((4, 2), quality=3)])
+        item = _items(load_bytes(result.data).profile)[(4, 2)]
+        assert item.quality == 3 and item.flags & model.HAS_QUALITY
+
+    def test_quality_of_one_clears_the_flag(self, save):
+        # (4,2) starts at the default quality (1, no flag); set it up first,
+        # then set it back down, matching the stack round-trip test above.
+        result = apply_edits(save, [inv.SetItemField((4, 2), quality=3)])
+        result = apply_edits(load_bytes(result.data), [inv.SetItemField((4, 2), quality=1)])
+        item = _items(load_bytes(result.data).profile)[(4, 2)]
+        assert item.quality == 1 and not item.flags & model.HAS_QUALITY
+
+    def test_quality_above_the_old_vanilla_cap_is_accepted(self, save):
+        # The headline case: Forge of Potential (Ashlands) already pushes real
+        # items past the old max of 4, so this must not be rejected as "too high".
+        result = apply_edits(save, [inv.SetItemField((4, 2), quality=10)])
+        item = _items(load_bytes(result.data).profile)[(4, 2)]
+        assert item.quality == 10
+
+    def test_quality_combines_with_stack_and_durability_in_one_commit(self, save):
+        result = apply_edits(save, [inv.SetItemField((4, 2), stack=7, durability=50.0, quality=3)])
+        item = _items(load_bytes(result.data).profile)[(4, 2)]
+        assert (item.stack, item.durability_x100, item.quality) == (7, 5000, 3)
+
+    @pytest.mark.parametrize("quality", [0, -1])
+    def test_quality_below_one_rejected(self, quality):
+        with pytest.raises(EditError, match="quality"):
+            inv.SetItemField((0, 0), quality=quality)
+
 
 class TestRemoveItem:
     def test_removes_only_that_item(self, save):
@@ -297,6 +327,18 @@ def test_cli_set_and_verify(sample_bytes, tmp_path):
     assert main(["inv", "set", str(src), "--slot", "4,2", "--stack", "50", "--out", str(out)]) == 0
     assert load_file(out).profile.player.items[3].stack == 50 or \
         any(i.stack == 50 for i in load_file(out).profile.player.items if (i.x, i.y) == (4, 2))
+    assert src.read_bytes() == sample_bytes
+
+
+def test_cli_set_quality_above_the_old_vanilla_cap(sample_bytes, tmp_path):
+    """The core error message names quality as one of the fields `inv set`
+    accepts, so the command has to actually offer --quality -- and 7 is above
+    the old vanilla max of 4 on purpose (Forge of Potential)."""
+    src, out = tmp_path / "hero.fch", tmp_path / "edited.fch"
+    src.write_bytes(sample_bytes)
+    assert main(["inv", "set", str(src), "--slot", "4,2", "--quality", "7", "--out", str(out)]) == 0
+    item = next(i for i in load_file(out).profile.player.items if (i.x, i.y) == (4, 2))
+    assert item.quality == 7 and item.flags & model.HAS_QUALITY
     assert src.read_bytes() == sample_bytes
 
 

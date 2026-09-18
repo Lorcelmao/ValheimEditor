@@ -725,7 +725,7 @@ function renderOverflow(overflow, width, height, writable) {
   }
   wrapper.appendChild(el("div", { class: "notice notice-warn" }, lines));
   wrapper.appendChild(table(
-    ["Slot", "Item", "Stack", "Durability", ""],
+    ["Slot", "Item", "Stack", "Durability", "Quality", ""],
     overflow.map(({ item: it, collision }) => {
       if (collision) {
         return [
@@ -733,19 +733,24 @@ function renderOverflow(overflow, width, height, writable) {
           el("td", {}, itemNameNodes(it)),
           el("td", { class: "mono num", text: String(it.stack) }),
           el("td", { class: "mono num", text: f32Text(it.durability) }),
+          el("td", { class: "mono num", text: String(it.quality) }),
           el("td", { class: "muted", text: "shared slot" }),
         ];
       }
-      const { stackInput, durInput } = itemFieldInputs(it, writable);
+      // Same reasoning as the detail panel: a shared-slot item can't be
+      // edited by slot at all (ambiguous), but an out-of-grid item with a
+      // unique coordinate is edited exactly like one inside the grid.
+      const { stackInput, durInput, qualityInput } = itemFieldInputs(it, writable);
       return [
         el("td", { class: "mono", text: `${it.x},${it.y}` }),
         el("td", {}, itemNameNodes(it)),
         el("td", { class: "mono num" }, [numberField(stackInput)]),
         el("td", { class: "mono num" }, [numberField(durInput)]),
+        el("td", { class: "mono num" }, [numberField(qualityInput)]),
         el("td", {}, [removeButton(it, writable)]),
       ];
     }),
-    [2, 3],
+    [2, 3, 4],
   ));
   return wrapper;
 }
@@ -768,19 +773,39 @@ function itemNameNodes(it) {
 // (stack-only, then durability-only) would silently drop whichever field was
 // edited first instead of merging. One function builds both inputs so there
 // is no second commit path to keep in sync.
+// Whole numbers only, exactly as typed. parseInt() would turn "1e3" into 1 and
+// "7.5" into 7 and hand both to Number.isInteger as if they were fine -- a
+// silent truncation of what the user actually entered.
+function parseWholeNumber(text) {
+  return /^\s*-?\d+\s*$/.test(text) ? parseInt(text, 10) : NaN;
+}
+
 function itemFieldInputs(it, writable) {
   const stackInput = el("input", { type: "number", min: "1", max: "65535", step: "1", value: it.stack, class: "mono", disabled: !writable });
   const durInput = el("input", { type: "number", min: "0", step: "any", value: f32Text(it.durability), class: "mono", disabled: !writable });
+  // No `max`: the old vanilla cap of 4 is not a real rule any more -- the
+  // Ashlands Forge of Potential already pushes real items past it, and no
+  // confirmed ceiling exists post-Ashlands. Inventing one here would be a
+  // wrong guess dressed as a safety rail.
+  const qualityInput = el("input", { type: "number", min: "1", step: "1", value: it.quality, class: "mono", disabled: !writable });
   const commit = () => {
-    const n = parseInt(stackInput.value, 10);
+    const n = parseWholeNumber(stackInput.value);
     if (!Number.isInteger(n)) { showError("Stack must be a whole number."); refreshAll(); return; }
     const d = parseFloat(durInput.value);
     if (!Number.isFinite(d)) { showError("Durability must be a number."); refreshAll(); return; }
-    submitEdit({ kind: "item_field", slot: [it.x, it.y], stack: n, durability: d });
+    const q = parseWholeNumber(qualityInput.value);
+    if (!Number.isInteger(q) || q < 1) { showError("Quality must be a whole number, 1 or more."); refreshAll(); return; }
+    // One combined edit for all three fields -- never a second, partial
+    // commit for the same slot. edit_key dedups SetItemField by slot alone
+    // and replaces rather than merges, so two separate partial commits would
+    // silently drop whichever field wasn't repeated (a real bug this project
+    // already shipped once).
+    submitEdit({ kind: "item_field", slot: [it.x, it.y], stack: n, durability: d, quality: q });
   };
   stackInput.addEventListener("change", commit);
   durInput.addEventListener("change", commit);
-  return { stackInput, durInput };
+  qualityInput.addEventListener("change", commit);
+  return { stackInput, durInput, qualityInput };
 }
 
 function removeButton(it, writable) {
@@ -824,20 +849,24 @@ function fillSlotDetail(detailEl, byCoord, writable, panel) {
     return;
   }
 
-  const { stackInput, durInput } = itemFieldInputs(it, writable);
+  const { stackInput, durInput, qualityInput } = itemFieldInputs(it, writable);
   detailEl.appendChild(el("div", { class: "slot-detail-name" }, itemNameNodes(it)));
-  detailEl.appendChild(table(["Quality", "Crafter", "Prefab hash"], [[
-    el("td", { class: "mono num", text: String(it.quality) }),
+  detailEl.appendChild(table(["Crafter", "Prefab hash"], [[
     el("td", { text: it.crafter_name || "—" }),
     el("td", { class: "mono", text: `${it.prefab_hash}` }),
-  ]], [0]));
+  ]]));
   detailEl.appendChild(el("div", { class: "slot-detail-fields" }, [
     el("label", { text: "Stack " }, [numberField(stackInput)]),
     el("label", { text: " Durability " }, [numberField(durInput)]),
+    el("label", { text: " Quality " }, [numberField(qualityInput)]),
     el("span", { class: "slot-detail-equipped", text: it.equipped ? "Equipped" : "" }),
     copyButton(it, writable),
     removeButton(it, writable),
   ]));
+  // Not a real cap on the input, just a note: the old vanilla max of 4 is
+  // dead now that the Ashlands Forge of Potential can push items past it.
+  detailEl.appendChild(el("p", { class: "muted slot-detail-hint",
+    text: "No upper limit on Quality — the Forge of Potential can push this well past the old vanilla maximum." }));
 }
 
 // Repaints just the "adding into slot x,y" indicator, so aiming or clearing

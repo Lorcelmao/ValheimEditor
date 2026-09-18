@@ -142,6 +142,21 @@ def test_item_field_and_remove_match_the_equivalent_dataclass_edits(session, sav
     expected = apply_edits(save, [SetItemField((x, y), stack=5)])
     assert r1.result_bytes() == expected.data
 
+    r1b = Session()
+    r1b.open(save.original)
+    # quality=10 is above the old vanilla cap of 4 on purpose -- Forge of
+    # Potential means that is not a real ceiling, and it must not be rejected.
+    assert r1b.add_edit({"kind": "item_field", "slot": [x, y], "quality": 10})["ok"] is True
+    expected1b = apply_edits(save, [SetItemField((x, y), quality=10)])
+    assert r1b.result_bytes() == expected1b.data
+
+    r1c = Session()
+    r1c.open(save.original)
+    assert r1c.add_edit({"kind": "item_field", "slot": [x, y], "stack": 5, "durability": 42.0,
+                         "quality": 3})["ok"] is True
+    expected1c = apply_edits(save, [SetItemField((x, y), stack=5, durability=42.0, quality=3)])
+    assert r1c.result_bytes() == expected1c.data
+
     r2 = Session()
     r2.open(save.original)
     assert r2.add_edit({"kind": "item_remove", "slot": [x, y]})["ok"] is True
@@ -246,6 +261,9 @@ def test_invalid_value_is_a_structured_error(session):
     {"kind": "item_field", "slot": [0, 0], "stack": 5.0},              # float stack
     {"kind": "item_field", "slot": [0.0, 0], "stack": 5},              # float in one slot component
     {"kind": "item_remove", "slot": [True, 0]},                        # bool is an int subclass -- must not sneak through
+    {"kind": "item_field", "slot": [0, 0], "quality": 7.5},            # float quality
+    {"kind": "item_field", "slot": [0, 0], "quality": True},           # bool quality
+    {"kind": "item_field", "slot": [0, 0], "quality": "5"},            # string quality
 ])
 def test_non_integer_slot_or_stack_is_a_clean_error_not_a_crash(session, spec):
     """Regression test: a JSON float where a slot/stack expects a whole number

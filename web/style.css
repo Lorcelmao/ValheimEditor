@@ -860,6 +860,11 @@ input[type="color"] {
   font-size: 0.85rem;
 }
 
+.slot-detail-hint {
+  margin: calc(var(--space) * 2) 0 0;
+  font-size: 0.8rem;
+}
+
 .add-target {
   color: var(--accent);
   font-size: 0.85rem;

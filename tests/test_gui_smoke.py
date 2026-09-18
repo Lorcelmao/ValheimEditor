@@ -117,7 +117,7 @@ def test_inventory_tab_select_set_and_remove(app_window, sample_copy):
     assert (4, 2) not in {(i.x, i.y) for i in app_window.state.preview().profile.player.items}
 
 
-def test_inventory_tab_copy_preserves_quality_and_stays_selected(app_window, sample_copy):
+def test_inventory_tab_copy_preserves_quality_and_stays_selected(app_window, sample_copy, auto_confirm):
     app_window.open_file(sample_copy)
     inv_tab = app_window.inventory_tab
     # Mutate the baseline (state.save.profile), not preview()'s result:
@@ -137,6 +137,12 @@ def test_inventory_tab_copy_preserves_quality_and_stays_selected(app_window, sam
     _select_slot(inv_tab, "4,2")
     inv_tab._apply_copy()
 
+    # apply_edits_batch() swallows EditError/UnsafeWrite into a dialog, which
+    # auto_confirm redirects into this list instead of raising -- so a
+    # rejected edit would otherwise show up several lines down as a confusing
+    # item-count mismatch with no indication of why. Assert this first.
+    assert auto_confirm == [], f"copy was rejected: {auto_confirm}"
+
     after = app_window.state.preview().profile.player
     assert len(after.items) == before_count + 1
     new_items = [i for i in after.items if (i.x, i.y) not in before_slots]
@@ -154,6 +160,58 @@ def test_inventory_tab_copy_without_a_selection_reports_cleanly(app_window, samp
     inv_tab._selected_slot = None
     inv_tab._apply_copy()
     assert any("Select an item first" in e for e in auto_confirm)
+
+
+def test_inventory_tab_sets_quality_above_the_old_vanilla_cap(app_window, sample_copy, auto_confirm):
+    """The Ashlands Forge of Potential pushes items past the old max of 4, so 5
+    must be accepted -- and must show up in the tree, which had no quality
+    column at all before."""
+    app_window.open_file(sample_copy)
+    inv_tab = app_window.inventory_tab
+    _select_slot(inv_tab, "4,2")
+    inv_tab.quality_var.set("5")
+    inv_tab._apply_set()
+    assert auto_confirm == [], f"edit was rejected: {auto_confirm}"
+
+    item = next(i for i in app_window.state.preview().profile.player.items if (i.x, i.y) == (4, 2))
+    assert item.quality == 5
+
+    # Re-selecting repopulates the field from the tree's own quality column.
+    _select_slot(inv_tab, "4,2")
+    assert inv_tab.quality_var.get() == "5"
+    row = next(r for r in inv_tab.tree.get_children() if inv_tab.tree.item(r, "values")[0] == "4,2")
+    assert "5" in [str(v) for v in inv_tab.tree.item(row, "values")]
+
+
+def test_inventory_tab_quality_and_stack_edits_do_not_drop_each_other(app_window, sample_copy, auto_confirm):
+    """edit_key() dedups a SetItemField by slot and REPLACES rather than merges,
+    so a second Apply that omitted quality would silently discard the first.
+    _apply_set reads every field each time, so editing stack afterwards must
+    carry the earlier quality edit along."""
+    app_window.open_file(sample_copy)
+    inv_tab = app_window.inventory_tab
+    _select_slot(inv_tab, "4,2")
+    inv_tab.quality_var.set("3")
+    inv_tab._apply_set()
+
+    inv_tab.stack_var.set("9")
+    inv_tab._apply_set()
+    assert auto_confirm == [], f"edit was rejected: {auto_confirm}"
+
+    assert len(app_window.state.pending) == 1  # replaced, not piled up
+    item = next(i for i in app_window.state.preview().profile.player.items if (i.x, i.y) == (4, 2))
+    assert (item.stack, item.quality) == (9, 3)
+
+
+def test_inventory_tab_rejects_bad_quality(app_window, sample_copy, auto_confirm):
+    app_window.open_file(sample_copy)
+    inv_tab = app_window.inventory_tab
+    _select_slot(inv_tab, "4,2")
+    for bad in ("0", "-1", "abc", "2.5"):
+        inv_tab.quality_var.set(bad)
+        inv_tab._apply_set()
+    assert not app_window.state.dirty
+    assert len(auto_confirm) == 4  # every bad value got its own error dialog
 
 
 def test_inventory_tab_add_unknown_item_needs_opt_in(app_window, sample_copy, auto_confirm):

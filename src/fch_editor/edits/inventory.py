@@ -11,7 +11,8 @@ import math
 from dataclasses import dataclass
 
 from ..errors import EditError
-from ..model import EQUIPPED, HAS_CRAFTER, HAS_PREFAB, HAS_STACK, PICKED_UP, Item, PlayerData, Profile
+from ..model import (EQUIPPED, HAS_CRAFTER, HAS_PREFAB, HAS_QUALITY, HAS_STACK, PICKED_UP, Item,
+                    PlayerData, Profile)
 from ..stable_hash import stable_hash
 
 GRID_WIDTH = 8
@@ -85,25 +86,40 @@ def _scope(slot: tuple[int, int]) -> str:
 
 @dataclass
 class SetItemField:
-    """Set stack and/or durability on the item already at `slot`.
+    """Set stack, durability, and/or quality on the item already at `slot`.
 
     `durability` takes the human-readable units `fch info`/`fch inv list` show
     (e.g. 100.0); it is converted to the file's x100 int once, up front.
+
+    `quality` (the upgrade level shown in-game) has no upper bound here beyond
+    the format's own u16 storage ceiling. The old vanilla max of 4 is no longer
+    a real rule: the Ashlands "Forge of Potential" already pushes items past it
+    using idols, and no confirmed cap exists post-Ashlands -- inventing one here
+    would be a wrong guess dressed as a safety rail. An existing, trusted
+    community save editor bundled in this repo for reference (REFERENCES/VPE.exe)
+    validates quality the same way: a positive integer, nothing more.
     """
 
     slot: tuple[int, int]
     stack: int | None = None
     durability: float | None = None
+    quality: int | None = None
 
     def __post_init__(self):
-        if self.stack is None and self.durability is None:
-            raise EditError("give at least one of stack or durability")
+        if self.stack is None and self.durability is None and self.quality is None:
+            raise EditError("give at least one of stack, durability, or quality")
         if self.stack is not None and not 1 <= self.stack <= 65535:
             raise EditError(f"stack must be 1-65535, got {self.stack}")
+        if self.quality is not None and not 1 <= self.quality <= 65535:
+            raise EditError(f"quality must be 1-65535, got {self.quality}")
         self._durability_x100 = to_durability_x100(self.durability) if self.durability is not None else None
 
     def apply(self, profile: Profile) -> list[str]:
         item = _find(_player(profile), self.slot)
+        if self.quality is not None:
+            item.quality = self.quality
+            # Keep the flag consistent with the value: quality 1 needs no field at all.
+            item.flags = (item.flags | HAS_QUALITY) if self.quality != 1 else (item.flags & ~HAS_QUALITY)
         if self.stack is not None:
             item.stack = self.stack
             # Keep the flag consistent with the value: a stack of 1 needs no field at all.

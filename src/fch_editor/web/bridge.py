@@ -79,7 +79,8 @@ def _build_guardian_power(spec: dict) -> SetGuardianPower:
 
 
 def _build_item_field(spec: dict) -> SetItemField:
-    return SetItemField(_slot(spec), stack=_optional_int(spec, "stack"), durability=spec.get("durability"))
+    return SetItemField(_slot(spec), stack=_optional_int(spec, "stack"), durability=spec.get("durability"),
+                        quality=_optional_int(spec, "quality"))
 
 
 def _build_item_remove(spec: dict) -> RemoveItem:

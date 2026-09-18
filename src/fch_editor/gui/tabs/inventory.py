@@ -8,7 +8,7 @@ from ...errors import EditError
 from ...stable_hash import stable_hash
 from ..widgets import AutocompleteCombobox
 
-_COLUMNS = ("slot", "item", "stack", "durability", "equipped", "crafter")
+_COLUMNS = ("slot", "item", "stack", "durability", "quality", "equipped", "crafter")
 
 
 class InventoryTab(ttk.Frame):
@@ -53,17 +53,26 @@ class InventoryTab(ttk.Frame):
         edit_form = ttk.LabelFrame(self, text="Selected item")
         self.stack_var = tk.StringVar()
         self.durability_var = tk.StringVar()
+        self.quality_var = tk.StringVar()
         ttk.Label(edit_form, text="Stack:").grid(row=0, column=0, padx=4, pady=4)
         ttk.Entry(edit_form, textvariable=self.stack_var, width=8).grid(row=0, column=1)
         ttk.Label(edit_form, text="Durability:").grid(row=0, column=2, padx=4)
         ttk.Entry(edit_form, textvariable=self.durability_var, width=10).grid(row=0, column=3)
-        ttk.Button(edit_form, text="Apply", command=self._apply_set).grid(row=0, column=4, padx=8)
-        ttk.Button(edit_form, text="Copy", command=self._apply_copy).grid(row=0, column=5, padx=(0, 8))
-        ttk.Button(edit_form, text="Remove", command=self._apply_remove).grid(row=0, column=6)
+        # No upper limit, deliberately: the old vanilla max of 4 stopped being a
+        # real rule when the Ashlands Forge of Potential started pushing items
+        # past it, and no confirmed ceiling exists.
+        ttk.Label(edit_form, text="Quality:").grid(row=0, column=4, padx=4)
+        ttk.Entry(edit_form, textvariable=self.quality_var, width=6).grid(row=0, column=5)
+        ttk.Button(edit_form, text="Apply", command=self._apply_set).grid(row=0, column=6, padx=8)
+        ttk.Button(edit_form, text="Copy", command=self._apply_copy).grid(row=0, column=7, padx=(0, 8))
+        ttk.Button(edit_form, text="Remove", command=self._apply_remove).grid(row=0, column=8)
+        ttk.Label(edit_form, foreground="gray", text=(
+            "Quality has no upper limit — the Forge of Potential can push it well past the old vanilla maximum."
+        )).grid(row=1, column=0, columnspan=9, sticky="w", padx=4, pady=(0, 4))
         edit_form.pack(side="bottom", fill="x", padx=8, pady=(0, 8))
 
         self.tree = ttk.Treeview(self, columns=_COLUMNS, show="headings", selectmode="browse", height=10)
-        for col, width in zip(_COLUMNS, (60, 200, 60, 80, 70, 100)):
+        for col, width in zip(_COLUMNS, (60, 200, 60, 80, 60, 70, 100)):
             self.tree.heading(col, text=col.capitalize())
             self.tree.column(col, width=width, anchor="center" if col not in ("item", "crafter") else "w")
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
@@ -74,10 +83,11 @@ class InventoryTab(ttk.Frame):
         if not sel:
             self._selected_slot = None
             return
-        slot_text, _name, stack, durability, *_ = self.tree.item(sel[0], "values")
+        slot_text, _name, stack, durability, quality, *_ = self.tree.item(sel[0], "values")
         self._selected_slot = inv.parse_slot(slot_text)
         self.stack_var.set(stack)
         self.durability_var.set(durability)
+        self.quality_var.set(quality)
 
     def _apply_set(self) -> None:
         if self._selected_slot is None:
@@ -86,9 +96,10 @@ class InventoryTab(ttk.Frame):
         try:
             stack = int(self.stack_var.get()) if self.stack_var.get().strip() else None
             durability = float(self.durability_var.get()) if self.durability_var.get().strip() else None
-            edit = inv.SetItemField(self._selected_slot, stack=stack, durability=durability)
+            quality = int(self.quality_var.get()) if self.quality_var.get().strip() else None
+            edit = inv.SetItemField(self._selected_slot, stack=stack, durability=durability, quality=quality)
         except ValueError:
-            self.app.show_error("Stack must be a whole number and durability a number.")
+            self.app.show_error("Stack and quality must be whole numbers and durability a number.")
             return
         except EditError as e:
             self.app.show_error(str(e))
@@ -151,7 +162,7 @@ class InventoryTab(ttk.Frame):
         self.grid_label.configure(text=f"grid: {width}x{height}  ({len(profile.player.items)} items)")
         for it in sorted(profile.player.items, key=lambda i: (i.y, i.x)):
             self.tree.insert("", "end", values=(
-                f"{it.x},{it.y}", self._item_label(it), it.stack, f"{it.durability:g}",
+                f"{it.x},{it.y}", self._item_label(it), it.stack, f"{it.durability:g}", it.quality,
                 "yes" if it.equipped else "", it.crafter_name,
             ))
         # Same "Display (Prefab)" shape as the table above, so an item reads
