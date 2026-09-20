@@ -218,6 +218,11 @@ Produces `dist\fch-editor.exe` (~11 MB), which runs on a machine with no Python 
 or antivirus may flag a fresh, unsigned PyInstaller build the first time — this is a known PyInstaller quirk,
 not a sign of anything in the exe itself; running from source (`fch gui`) is always an alternative.
 
+The app icon lives in `src/fch_editor/gui/icon.ico` (the exe's file icon and the window/taskbar icon) and the
+web page's in `web/favicon.ico` and `web/apple-touch-icon.png`. All three are generated from one source PNG
+(the repo's `assets/` folder is gitignored, so the PNG itself isn't tracked); to change the icon, regenerate
+those three files and rebuild.
+
 ## Troubleshooting
 
 | Message | Meaning / fix |

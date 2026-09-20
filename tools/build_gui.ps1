@@ -24,7 +24,9 @@ $ErrorActionPreference = 'Continue'
 try {
     & $pyinstaller --noconfirm --onefile --windowed --name fch-editor `
         --paths "$root\src" `
+        --icon "$root\src\fch_editor\gui\icon.ico" `
         --add-data "$root\src\fch_editor\catalog\data\items.txt;fch_editor\catalog\data" `
+        --add-data "$root\src\fch_editor\gui\icon.ico;fch_editor\gui" `
         --distpath "$root\dist" --workpath "$root\build" --specpath "$root\build" `
         "$root\tools\gui_launcher.py"
 } finally {

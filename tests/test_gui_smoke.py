@@ -1038,3 +1038,45 @@ def test_closing_the_app_while_the_prompt_is_up_does_not_raise(app_window, sampl
     monkeypatch.setattr(app_window, "refresh_all", lambda: refreshed.append(1))
     tab._sort()  # returns quietly instead of raising, and touches nothing afterwards
     assert refreshed == [1]  # only apply_edit's own refresh; the Undo path never ran
+
+
+# --- window icon --------------------------------------------------------------------
+
+def _new_app_or_skip():
+    from fch_editor.gui.app import App
+    last_error = None
+    for _attempt in range(3):
+        try:
+            app = App()
+            app.geometry("760x560+2000+2000")
+            return app
+        except tk.TclError as e:
+            last_error = e
+    pytest.skip(f"no display available for Tk: {last_error}")
+
+
+def test_the_window_icon_is_set_from_the_shipped_file(monkeypatch):
+    from fch_editor.gui import app as app_module
+    calls = []
+    monkeypatch.setattr(tk.Tk, "iconbitmap", lambda self, *a, **kw: calls.append((a, kw)))
+    window = _new_app_or_skip()
+    try:
+        assert calls == [((), {"default": str(app_module.ICON_PATH)})]  # default= so dialogs inherit it
+        assert app_module.ICON_PATH.is_file()
+    finally:
+        window.destroy()
+
+
+def test_an_unreadable_or_missing_icon_never_stops_the_app_opening(monkeypatch):
+    from fch_editor.gui.app import App
+    try:  # only a missing display may skip this; App() below must be allowed to raise for real
+        tk.Tk().destroy()
+    except tk.TclError as e:
+        pytest.skip(f"no display available for Tk: {e}")
+
+    def refuse(self, *a, **kw):
+        raise tk.TclError("bitmap not defined")  # what Tk raises for a missing file or a non-.ico platform
+
+    monkeypatch.setattr(tk.Tk, "iconbitmap", refuse)
+    window = App()
+    window.destroy()

@@ -23,6 +23,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "fch_editor.catalog" = ["data/*.txt"]
+"fch_editor.gui" = ["icon.ico"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

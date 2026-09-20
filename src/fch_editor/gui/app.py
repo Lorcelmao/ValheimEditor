@@ -22,6 +22,10 @@ from .tabs.skills import SkillsTab
 from .widgets import set_widgets_state
 
 
+# Shipped next to this module (and bundled into the .exe by tools/build_gui.ps1).
+ICON_PATH = Path(__file__).with_name("icon.ico")
+
+
 def default_save_dir() -> Path:
     candidate = Path.home() / "AppData/LocalLow/IronGate/Valheim/characters_local"
     return candidate if candidate.is_dir() else Path.home()
@@ -32,6 +36,7 @@ class App(tk.Tk):
         super().__init__()
         self.title("Valheim Save Editor")
         self.geometry("760x560")
+        self._apply_icon()
         self.catalog = ItemCatalog.load()
         self.state: AppState | None = None
 
@@ -51,6 +56,15 @@ class App(tk.Tk):
             notebook.add(tab, text=label)
 
         self.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def _apply_icon(self) -> None:
+        """Window/taskbar icon, and the default for every dialog. Cosmetic, so a
+        missing file (a pip install without package data) or a platform that
+        cannot read .ico must never stop the app opening."""
+        try:
+            self.iconbitmap(default=str(ICON_PATH))
+        except tk.TclError:
+            pass
 
     def _build_menu(self) -> None:
         menubar = tk.Menu(self)
