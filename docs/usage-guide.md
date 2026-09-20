@@ -184,6 +184,21 @@ Or, once built (see below), just double-click **`dist\fch-editor.exe`** — no P
 
 - **Tabs:** Overview (read-only summary), Skills, Character, Inventory. Each edit form has its own
   **Apply**/**Add**/**Remove** button; nothing is written to disk until you use **File > Save** or **Save As**.
+- **Inventory view:** the **List / Grid** switch at the top of the Inventory tab shows the same items as a table
+  or as the game's slot grid (List is the default each launch). Click an item in either view to load it into the
+  **Selected item** form; click an empty slot to aim the Add form's *Slot* field at it. Items the grid can't place
+  because their coordinates fall outside it (a mod, or a shrunken grid) appear as tiles under an **Outside the
+  grid** heading, labelled with their real `x,y`, and edit like any other item. If two items claim the same slot,
+  both are view-only (orange in Grid view), since an edit finds its item by slot. A read-only save can still
+  switch views and inspect items.
+- **Sort** (Inventory tab) tidies everything below the hotbar: items are ordered A–Z by in-game name, with the
+  bigger stack first among identical items, and packed from the top-left of the second row. The hotbar (top row),
+  equipped items and anything outside the grid stay where they are, and stacks are not merged. It switches to Grid
+  view and asks **Keep this order?** — **Undo** (also Escape / closing the window) puts everything back exactly.
+  A kept sort is still only pending until you save.
+- **Add item > Browse…** opens a search window: type part of an in-game name (`tunic`) or a prefab name
+  (`ArmorBronzeChest`) and click a result to fill the Name field. It starts empty on purpose — it lists only what
+  you search for — and typing the name directly, including *allow unknown item*, still works.
 - **File > Save** overwrites the open file (a timestamped backup is kept next to it, same as `--in-place`).
   **File > Save As…** writes a new file and leaves the original untouched, same as `--out`.
 - Before writing, a dialog lists every field that will change — cancel there and nothing is written.

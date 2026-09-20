@@ -1,13 +1,14 @@
 """Inventory edits: set stack/durability, remove, add by prefab name (spec §6).
 
-Conservative on purpose: no quality/variant/customData editing, no equip
-toggling, no moving an existing item (only setting fields on it). Items with
+Conservative on purpose: no variant/customData editing, no equip toggling,
+and the only edit that moves existing items is `SortInventory`. Items with
 an unrecognised prefab hash are always safe to list, move past, or remove —
 only *adding* a name needs it to resolve to a real prefab, because the game
 deletes an item whose hash it does not recognise on load.
 """
 import copy
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from ..errors import EditError
@@ -165,6 +166,58 @@ class CopyItem:
         item.flags &= ~EQUIPPED
         player.items.append(item)
         return ["player.items.count", _scope(free)]
+
+
+@dataclass
+class SortInventory:
+    """Tidy everything below the hotbar: order the items in rows 1..height-1
+    alphabetically by name and pack them row by row from slot (0,1).
+
+    Row 0 (the hotbar), anything outside the grid, and every EQUIPPED item are
+    left exactly where they are; the rest sort around the equipped ones. Only
+    `x` and `y` change -- stack, durability, quality, flags, crafter and custom
+    data are untouched, and stacks are NOT merged (the maximum stack size is
+    prefab data the save does not carry, so merging would be a guess).
+
+    `label_of` maps a prefab hash to the name to sort by. The catalog lives
+    outside `edits/`, so the caller passes it in and this stays free of I/O.
+    """
+
+    label_of: Callable[[int], str]
+
+    # AppState.add() reads this: an edit made before a sort addresses a slot by
+    # where the item WAS, one made after it by where the item IS, so a pending
+    # edit must never be de-duplicated across one. Any future edit that moves
+    # items has to set the same marker.
+    reorders_items = True
+
+    def plan(self, player: PlayerData) -> list[tuple[Item, int, int]]:
+        """(item, new_x, new_y) for every item that takes part. Pure: it mutates
+        nothing, so a UI can ask "would anything move?" before committing to an edit."""
+        width, height = grid_size(player)
+        below = [i for i in player.items if 0 <= i.x < width and 1 <= i.y < height]
+        pinned = {(i.x, i.y) for i in below if i.equipped}
+        region = [i for i in below if not i.equipped]
+        slots = [(x, y) for y in range(1, height) for x in range(width) if (x, y) not in pinned]
+        if len(region) > len(slots):
+            raise EditError("more items than free slots below the hotbar; refusing to drop any")
+        # The prefab sits between the name and the stack: about 60 display names are
+        # shared by several prefabs (three different "Bronze Plate Tunic"s), and
+        # without it their stacks would interleave instead of grouping. The hash is
+        # arbitrary but stable, which is all grouping needs. sort() is stable, so
+        # items that still tie keep their existing order in the file.
+        region.sort(key=lambda i: (self.label_of(i.prefab_hash).lower(), i.prefab_hash, -i.stack, -i.quality))
+        return [(item, x, y) for item, (x, y) in zip(region, slots)]
+
+    def apply(self, profile: Profile) -> list[str]:
+        player = _player(profile)
+        for item, x, y in self.plan(player):
+            item.x, item.y = x, y
+        width, height = grid_size(player)
+        # Every slot in the region: a moved item shows up as field changes at both
+        # its old and its new coordinate, and the blast-radius check only flags
+        # changes OUTSIDE what an edit declares.
+        return [_scope((x, y)) for y in range(1, height) for x in range(width)]
 
 
 @dataclass

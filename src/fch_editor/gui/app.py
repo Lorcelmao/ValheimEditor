@@ -86,6 +86,7 @@ class App(tk.Tk):
             self.show_error(f"Could not open {path}:\n{e}")
             return
         self.state = AppState(save)
+        self.inventory_tab.reset_selection()
         self.status_var.set(f"Opened {path}" if save.writable else
                             f"Opened {path} — READ ONLY: {'; '.join(save.reasons)}")
         self.refresh_all()

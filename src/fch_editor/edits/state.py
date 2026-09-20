@@ -30,7 +30,15 @@ class AppState:
         """Validation already happened in the edit's own __post_init__."""
         key = edit_key(edit)
         if key is not None:
-            self.pending = [e for e in self.pending if edit_key(e) != key]
+            # A slot-addressed edit only replaces edits made AFTER the last
+            # item-moving one: slots mean different items on either side of it
+            # (see SortInventory). Edits that are not addressed by slot (name,
+            # skills, ...) mean the same thing on both sides, so they still collapse.
+            start = 0
+            if hasattr(edit, "slot"):
+                start = max((n + 1 for n, e in enumerate(self.pending) if getattr(e, "reorders_items", False)),
+                            default=0)
+            self.pending = self.pending[:start] + [e for e in self.pending[start:] if edit_key(e) != key]
         self.pending.append(edit)
         self._cache = None
 

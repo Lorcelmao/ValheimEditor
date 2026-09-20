@@ -5,11 +5,23 @@ from tkinter import ttk
 _STATEFUL_CLASSES = {"TEntry", "TButton", "TCombobox", "TCheckbutton", "TRadiobutton"}
 
 
+def keep_enabled(widget: tk.Widget) -> tk.Widget:
+    """Mark `widget` (and everything under it) as exempt from
+    `set_widgets_state`. For controls that only *look* at data -- the
+    List/Grid view toggle -- so that "read-only save" keeps meaning "no
+    editing", not "no looking". Returns the widget."""
+    widget.keep_enabled = True
+    return widget
+
+
 def set_widgets_state(container: tk.Widget, enabled: bool) -> None:
     """Enable/disable every interactive ttk widget under `container` (e.g. to
-    grey out an edit tab for a read-only save)."""
+    grey out an edit tab for a read-only save). Anything marked with
+    `keep_enabled()` is skipped, along with its whole subtree."""
     state = "normal" if enabled else "disabled"
     for child in container.winfo_children():
+        if getattr(child, "keep_enabled", False):
+            continue
         if child.winfo_class() in _STATEFUL_CLASSES:
             try:
                 child.configure(state=state)
@@ -60,6 +72,28 @@ class AutocompleteCombobox(ttk.Combobox):
             label for value, label in self._entries
             if not typed or typed in label.lower() or typed in value.lower()
         ]
+
+
+class ScrollableFrame(ttk.Frame):
+    """A frame that scrolls vertically when its `.body` outgrows it. Tk has no
+    such primitive: this is the usual Canvas + inner Frame + Scrollbar, with the
+    mouse wheel active only while the pointer is over it."""
+
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.canvas = tk.Canvas(self, highlightthickness=0)
+        scroll = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=scroll.set)
+        scroll.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.body = ttk.Frame(self.canvas)
+        self.canvas.create_window((0, 0), window=self.body, anchor="nw")
+        self.body.bind("<Configure>", lambda _e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.bind("<Enter>", lambda _e: self.bind_all("<MouseWheel>", self._on_wheel))
+        self.bind("<Leave>", lambda _e: self.unbind_all("<MouseWheel>"))
+
+    def _on_wheel(self, event) -> None:
+        self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
 
 
 class LabeledEntry(ttk.Frame):

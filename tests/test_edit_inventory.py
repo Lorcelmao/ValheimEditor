@@ -385,3 +385,166 @@ def test_cli_bad_slot_writes_nothing(sample_bytes, tmp_path):
     assert main(["inv", "set", str(src), "--slot", "9,9", "--stack", "5", "--in-place"]) == 1
     assert src.read_bytes() == sample_bytes
     assert list(tmp_path.iterdir()) == [src]
+
+
+# --- SortInventory -------------------------------------------------------------
+
+def _label_of():
+    from fch_editor.catalog.items import ItemCatalog
+    catalog = ItemCatalog.load()
+    return lambda h: catalog.display(h) or catalog.label(h)
+
+
+def _without_position(item):
+    import dataclasses
+    return dataclasses.replace(item, x=0, y=0)
+
+
+def _sorted_save(save, **kw):
+    result = apply_edits(save, [inv.SortInventory(_label_of(), **kw)])
+    return load_bytes(result.data).profile, result
+
+
+def _below_hotbar(profile, equipped=False):
+    width, height = inv.grid_size(profile.player)
+    return [i for i in profile.player.items if 0 <= i.x < width and 1 <= i.y < height and i.equipped == equipped]
+
+
+class TestSortInventory:
+    def test_orders_everything_below_the_hotbar_by_name(self, save):
+        label_of = _label_of()
+        out, _ = _sorted_save(save)
+        names = [label_of(i.prefab_hash).lower() for i in sorted(_below_hotbar(out), key=lambda i: (i.y, i.x))]
+        assert names == sorted(names) and len(names) > 3
+
+    def test_only_x_and_y_change(self, save):
+        out, _ = _sorted_save(save)
+        key = lambda i: (i.prefab_hash, i.stack, i.quality, i.durability_x100, i.flags, i.crafter_name)  # noqa: E731
+        before = sorted((_without_position(i) for i in save.profile.player.items), key=key)
+        after = sorted((_without_position(i) for i in out.player.items), key=key)
+        assert before == after
+
+    def test_the_hotbar_is_untouched(self, save):
+        out, _ = _sorted_save(save)
+        hotbar = lambda p: {(i.x, i.y): i for i in p.player.items if i.y == 0}  # noqa: E731
+        assert hotbar(out) == hotbar(save.profile) and len(hotbar(out)) > 3
+
+    def test_equipped_items_keep_their_slot_and_the_rest_sort_around_them(self, save):
+        equipped_before = {(i.x, i.y) for i in save.profile.player.items if i.equipped and i.y >= 1}
+        assert equipped_before  # the sample has equipped armour below the hotbar
+        out, _ = _sorted_save(save)
+        assert {(i.x, i.y) for i in out.player.items if i.equipped and i.y >= 1} == equipped_before
+        taken = {(i.x, i.y) for i in _below_hotbar(out)}
+        assert taken.isdisjoint(equipped_before)  # nothing landed on a pinned slot
+
+    def test_items_pack_into_the_first_free_slots_with_the_gaps_at_the_end(self, save):
+        out, _ = _sorted_save(save)
+        width, height = inv.grid_size(out.player)
+        pinned = {(i.x, i.y) for i in _below_hotbar(out, equipped=True)}
+        free = [(x, y) for y in range(1, height) for x in range(width) if (x, y) not in pinned]
+        used = {(i.x, i.y) for i in _below_hotbar(out)}
+        assert used == set(free[:len(used)])
+
+    def test_items_outside_the_grid_stay_where_they_are(self, save):
+        stray = save.profile.player.items[0]
+        stray.x, stray.y = 99, 99
+        out, _ = _sorted_save(save)
+        assert any((i.x, i.y) == (99, 99) for i in out.player.items)
+
+    def test_sorting_twice_changes_nothing_more(self, save):
+        first, _ = _sorted_save(save)
+        again = inv.SortInventory(_label_of()).plan(first.player)
+        assert all((item.x, item.y) == (x, y) for item, x, y in again)
+
+    def test_plan_mutates_nothing(self, save):
+        before = [(i.x, i.y) for i in save.profile.player.items]
+        inv.SortInventory(_label_of()).plan(save.profile.player)
+        assert [(i.x, i.y) for i in save.profile.player.items] == before
+
+    def test_ties_keep_their_existing_order(self, save):
+        player = save.profile.player
+        first, second = [i for i in player.items if i.prefab_hash == WOOD and i.y >= 1][:2]
+        for item, marker in ((first, 111), (second, 222)):
+            item.stack, item.durability_x100 = 10, marker  # identical sort keys; the marker tells them apart
+        # swap their positions so the on-screen order is the OPPOSITE of the list order:
+        # only real stability (not "keep whatever order the grid shows") keeps first ahead of second
+        (first.x, first.y), (second.x, second.y) = (second.x, second.y), (first.x, first.y)
+        assert player.items.index(first) < player.items.index(second)
+        out, _ = _sorted_save(save)
+        by_marker = {i.durability_x100: i for i in out.player.items if i.durability_x100 in (111, 222)}
+        pos = lambda i: (i.y, i.x)  # noqa: E731
+        assert pos(by_marker[111]) < pos(by_marker[222])
+
+    def test_more_items_than_slots_refuses_and_moves_nothing(self, save):
+        import copy
+        player = save.profile.player
+        template = next(i for i in player.items if i.y >= 1 and not i.equipped)
+        for _ in range(30):  # several items on one coordinate -- a broken save -- overflow the region
+            extra = copy.deepcopy(template)
+            player.items.append(extra)
+        before = [(i.x, i.y) for i in player.items]
+        with pytest.raises(EditError, match="refusing to drop"):
+            inv.SortInventory(_label_of()).apply(save.profile)
+        assert [(i.x, i.y) for i in player.items] == before
+
+    def test_passes_the_blast_radius_check_and_reloads(self, save):
+        _, result = _sorted_save(save)  # apply_edits raises UnsafeWrite if a change is out of scope
+        assert result.changes  # the sample really does get rearranged
+        assert load_bytes(result.data).writable
+
+    def test_a_save_with_only_a_hotbar_is_left_alone(self, save):
+        player = save.profile.player
+        player.items = [i for i in player.items if i.y == 0]
+        assert inv.SortInventory(_label_of()).plan(player) == []
+
+
+class TestSortInventoryEdgeCases:
+    def test_a_full_grid_still_leaves_the_pinned_slots_alone(self, save):
+        """The sample only has 12 movable items, which never reach the row that holds
+        the equipped armour; fill every free slot so the sort has to step around it."""
+        import copy
+        player = save.profile.player
+        width, height = inv.grid_size(player)
+        pinned = {(i.x, i.y) for i in player.items if i.equipped and i.y >= 1}
+        template = next(i for i in player.items if i.y >= 1 and not i.equipped)
+        taken = {(i.x, i.y) for i in player.items}
+        for y in range(1, height):
+            for x in range(width):
+                if (x, y) not in taken:
+                    extra = copy.deepcopy(template)
+                    extra.x, extra.y = x, y
+                    player.items.append(extra)
+        assert len(_below_hotbar(save.profile)) == width * (height - 1) - len(pinned)  # exactly full
+        out, _ = _sorted_save(save)
+        coords = [(i.x, i.y) for i in out.player.items if i.y >= 1]
+        assert len(coords) == len(set(coords))  # nobody shares a slot
+        assert {(i.x, i.y) for i in out.player.items if i.equipped and i.y >= 1} == pinned
+
+    def test_the_bigger_stack_comes_first_among_identical_items(self, save):
+        out, _ = _sorted_save(save)
+        stacks = [i.stack for i in sorted(_below_hotbar(out), key=lambda i: (i.y, i.x)) if i.prefab_hash == WOOD]
+        assert len(stacks) >= 3 and stacks == sorted(stacks, reverse=True)
+
+
+class TestSortInventoryVariants:
+    def test_prefabs_that_share_a_display_name_group_instead_of_interleaving(self, save):
+        import copy
+        player = save.profile.player
+        template = next(i for i in player.items if i.y >= 1 and not i.equipped)
+        a, b = stable_hash("ArmorBronzeChest"), stable_hash("FW_ArmorBronzeChest")
+        label = lambda h: "Bronze Plate Tunic" if h in (a, b) else str(h)  # noqa: E731 - one shared display name
+        player.items = [i for i in player.items if i.y == 0 or i.equipped]  # start from an empty region
+        for prefab, stack in ((a, 5), (b, 50), (a, 50), (b, 5)):
+            extra = copy.deepcopy(template)
+            extra.prefab_hash, extra.stack = prefab, stack
+            extra.x, extra.y = -1, -1  # placed by the sort; give them slots that exist below
+            player.items.append(extra)
+        free = iter([(x, y) for y in (1, 2) for x in range(8)])
+        for item in player.items[-4:]:
+            item.x, item.y = next(free)
+        moves = inv.SortInventory(label).plan(player)
+        ordered = [item.prefab_hash for item, _x, _y in sorted(moves, key=lambda m: (m[2], m[1]))]
+        changes = sum(1 for p, q in zip(ordered, ordered[1:]) if p != q)
+        assert changes == 1  # AAAA... then BBBB..., never A B A B
+        stacks_a = [item.stack for item, _x, _y in sorted(moves, key=lambda m: (m[2], m[1])) if item.prefab_hash == a]
+        assert stacks_a == [50, 5]
